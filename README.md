@@ -18,7 +18,7 @@ Most users want **youtube-full** — it covers transcripts, search, channels, an
 
 **🦞 OpenClaw (ClawdBot/Moltbot):**
 ```bash
-clawdhub install youtube-full
+npx clawhub@latest install youtube-full
 ```
 
 **Claude Code / Cursor / Windsurf / Cline / Codex:**
@@ -183,7 +183,7 @@ Works with any AI agent that supports the [Agent Skills](https://skills.sh) form
 
 | Agent | Install Command |
 |-------|----------------|
-| 🦞 **[OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full)** (ClawdBot/Moltbot) | `clawdhub install youtube-full` |
+| 🦞 **[OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full)** (ClawdBot/Moltbot) | `npx clawhub@latest install youtube-full` |
 | **Claude Code** | `npx skills add ZeroPointRepo/youtube-skills` |
 | **Cursor** | `npx skills add ZeroPointRepo/youtube-skills` |
 | **Windsurf** | `npx skills add ZeroPointRepo/youtube-skills` |
