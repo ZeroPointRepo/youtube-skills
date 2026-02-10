@@ -1,11 +1,37 @@
 #!/usr/bin/env node
 
-const VERSION = "1.0.0";
+// ============================================================================
+// TranscriptAPI CLI — Passwordless Account Setup
+//
+// This script helps users create a TranscriptAPI.com account and obtain an
+// API key. It does NOT handle, store, or transmit passwords.
+//
+// Authentication flow:
+//   1. User provides email → server creates account and returns a short-lived
+//      session token (JWT, expires in ~30 min). No password is involved.
+//   2. Server sends a one-time 6-digit verification code to the email.
+//   3. User provides the code → server verifies and returns an API key.
+//   4. API key is saved to local config files for CLI/agent usage.
+//
+// The session token (--token) is:
+//   - Issued by the server, not generated locally
+//   - Short-lived (expires per server configuration)
+//   - Used only to authenticate the verification step
+//   - Never stored persistently — only the API key is saved
+//
+// Source: https://transcriptapi.com | Docs: https://docs.transcriptapi.com
+// ============================================================================
+
+const VERSION = "2.0.0";
 const BASE_URL = "https://transcriptapi.com/api/auth";
 
 // ============================================================================
 // Utilities
 // ============================================================================
+
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
 
 function parseArgs(args) {
   const result = { _: [] };
@@ -27,20 +53,25 @@ function parseArgs(args) {
   return result;
 }
 
-function err(msg, jsonMode = false) {
-  if (jsonMode) {
-    console.error(JSON.stringify({ error: msg }));
-  } else {
+// JSON output is the default (this is an agent tool). Use --human for readable output.
+function isHumanMode(args) {
+  return !!args.human;
+}
+
+function err(msg, humanMode = false) {
+  if (humanMode) {
     console.error(`Error: ${msg}`);
+  } else {
+    console.error(JSON.stringify({ error: msg }));
   }
   process.exit(1);
 }
 
-function out(msg, jsonMode = false, data = null) {
-  if (jsonMode) {
-    console.log(JSON.stringify(data || { message: msg }));
-  } else {
+function out(msg, humanMode = false, data = null) {
+  if (humanMode) {
     console.log(msg);
+  } else {
+    console.log(JSON.stringify(data || { message: msg }));
   }
 }
 
@@ -60,11 +91,13 @@ async function httpRequest(url, options = {}) {
 // API Functions
 // ============================================================================
 
-async function register(email, password, name) {
-  const payload = { email, password };
+// Passwordless registration — server creates account and returns a short-lived
+// session token. No password is generated or transmitted.
+async function registerCli(email, name) {
+  const payload = { email };
   if (name) payload.name = name;
 
-  const res = await httpRequest(`${BASE_URL}/register`, {
+  const res = await httpRequest(`${BASE_URL}/register-cli`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -78,9 +111,31 @@ async function register(email, password, name) {
     throw new Error(`Registration failed: ${msg}`);
   }
 
+  // Returns { access_token, token_type, email }
   return res.body;
 }
 
+// Verify email using the server-issued session token and the one-time code
+// sent to the user's email. Returns { verified, api_key }.
+async function verifyCli(sessionToken, otp) {
+  const res = await httpRequest(`${BASE_URL}/verify-cli`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${sessionToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ otp }),
+  });
+
+  if (!res.ok) {
+    const msg = res.body?.detail || res.body?.message || "Verification failed";
+    throw new Error(msg);
+  }
+
+  return res.body;
+}
+
+// Legacy: login with email/password (for backward compatibility only)
 async function login(email, password) {
   const formBody = new URLSearchParams();
   formBody.append("username", email);
@@ -98,38 +153,6 @@ async function login(email, password) {
   }
 
   return res.body.access_token;
-}
-
-async function sendVerificationOtp(token) {
-  const res = await httpRequest(`${BASE_URL}/send-verification-otp`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!res.ok) {
-    const msg = res.body?.detail || res.body?.message || "Failed to send OTP";
-    throw new Error(msg);
-  }
-
-  return res.body;
-}
-
-async function verifyEmail(token, otp) {
-  const res = await httpRequest(`${BASE_URL}/verify-email`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ otp }),
-  });
-
-  if (!res.ok) {
-    const msg = res.body?.detail || res.body?.message || "Verification failed";
-    throw new Error(msg);
-  }
-
-  return res.body;
 }
 
 async function getApiKeys(token) {
@@ -195,10 +218,6 @@ async function getEmailVerificationStatus(token) {
 // ============================================================================
 // File System Helpers
 // ============================================================================
-
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) {
@@ -274,306 +293,294 @@ function updateOrAppendSystemdEnv(filePath, varName, value) {
   return updated ? "updated" : "added";
 }
 
-// ============================================================================
-// Commands
-// ============================================================================
-
-async function cmdRegister(args) {
-  const json = !!args.json;
-  const email = args.email;
-  const password = args.password;
-  const name = args.name;
-
-  if (!email) err("--email is required", json);
-  if (!password) err("--password is required", json);
-
-  // Check for obvious temp email domains
-  const tempDomains = ["tempmail", "guerrilla", "10minute", "throwaway", "mailinator", "temp-mail", "fakeinbox", "trashmail"];
-  const emailLower = email.toLowerCase();
-  if (tempDomains.some(d => emailLower.includes(d))) {
-    err("Temporary/disposable emails are not allowed. Please use a real email address.", json);
-  }
-
-  try {
-    await register(email, password, name);
-    const token = await login(email, password);
-    await sendVerificationOtp(token);
-
-    if (json) {
-      out("", true, {
-        success: true,
-        email,
-        password,
-        password_note: "Save this — you need it for the verify step",
-        next_step: "verify",
-        action_required: "ask_user_for_otp",
-        user_prompt: `Check your email (${email}) for a 6-digit verification code.`,
-        next_command: `npx transcriptapi auth verify --email ${email} --password ${password} --otp <CODE> --json`
-      });
-    } else {
-      console.log(`\n✓ Account created. Verification OTP sent to ${email}.`);
-      console.log(`\n⚠️  Password: ${password} (save this for the next step!)`);
-      console.log(`\n→ Ask user: "Check your email for a 6-digit verification code."`);
-      console.log(`\n→ Then run: npx transcriptapi auth verify --email ${email} --password ${password} --otp CODE`);
-    }
-  } catch (e) {
-    err(e.message, json);
-  }
-}
-
-async function cmdVerify(args) {
-  const json = !!args.json;
-  const email = args.email;
-  const password = args.password;
-  const otp = args.otp;
-
-  if (!email) err("--email is required", json);
-  if (!password) err("--password is required", json);
-  if (!otp) err("--otp is required", json);
-
-  try {
-    const token = await login(email, password);
-    await verifyEmail(token, otp);
-
-    // Get or create API key
-    let keys = await getApiKeys(token);
-    let activeKey = keys.find((k) => k.is_active);
-
-    if (!activeKey) {
-      const newKey = await createApiKey(token);
-      activeKey = newKey;
-    }
-
-    const keyValue = activeKey.key;
-    
-    if (json) {
-      out("", true, {
-        success: true,
-        verified: true,
-        api_key: keyValue,
-        next_step: "save-key",
-        next_command: `npx transcriptapi auth save-key --key ${keyValue} --json`
-      });
-    } else {
-      console.log(`\n✓ Email verified!`);
-      console.log(`\n  API Key: ${keyValue}`);
-      console.log(`\n→ Save it: npx transcriptapi auth save-key --key ${keyValue}`);
-    }
-  } catch (e) {
-    err(e.message, json);
-  }
-}
-
-async function cmdGetKey(args) {
-  const json = !!args.json;
-  const email = args.email;
-  const password = args.password;
-
-  if (!email) err("--email is required", json);
-  if (!password) err("--password is required", json);
-
-  try {
-    const token = await login(email, password);
-    let keys = await getApiKeys(token);
-    let activeKey = keys.find((k) => k.is_active);
-
-    if (!activeKey) {
-      const newKey = await createApiKey(token);
-      activeKey = newKey;
-    }
-
-    const keyValue = activeKey.key;
-    out(keyValue, json, { api_key: keyValue });
-  } catch (e) {
-    err(e.message, json);
-  }
-}
-
-async function cmdSaveKey(args) {
-  const json = !!args.json;
-  const key = args.key;
-
-  if (!key) err("--key is required", json);
-  if (!key.startsWith("sk_")) err("Key should start with sk_", json);
-
+// Save an API key to all applicable config files. Returns { files, warnings }.
+// Used by both the save-key command and the verify command (auto-save).
+function saveApiKeyToConfigs(key) {
   const home = os.homedir();
   const platform = process.platform;
   const filesWritten = [];
   const warnings = [];
 
+  // =========================================================================
+  // 1. OpenClaw config (PRIMARY for agent skills)
+  // =========================================================================
+  const openclawConfigPath = path.join(home, ".openclaw", "openclaw.json");
+  const legacyConfigPath = path.join(home, ".clawdbot", "moltbot.json");
+
+  let agentConfigPath = null;
+
+  if (fs.existsSync(openclawConfigPath)) {
+    agentConfigPath = openclawConfigPath;
+  } else if (fs.existsSync(legacyConfigPath)) {
+    agentConfigPath = legacyConfigPath;
+  }
+
+  if (agentConfigPath) {
+    try {
+      const configContent = fs.readFileSync(agentConfigPath, "utf8");
+      const config = JSON.parse(configContent);
+
+      if (!config.skills) config.skills = {};
+      if (!config.skills.entries) config.skills.entries = {};
+      if (!config.skills.entries.transcriptapi) {
+        config.skills.entries.transcriptapi = {};
+      }
+      config.skills.entries.transcriptapi.apiKey = key;
+      config.skills.entries.transcriptapi.enabled = true;
+
+      fs.writeFileSync(agentConfigPath, JSON.stringify(config, null, 2));
+      filesWritten.push({ path: agentConfigPath, action: "updated", type: "openclaw-config" });
+    } catch (e) {
+      warnings.push(`Could not update ${agentConfigPath}: ${e.message}`);
+    }
+  }
+
+  // =========================================================================
+  // 2. Shell RC files (for terminal/CLI usage)
+  // =========================================================================
+
+  if (platform === "darwin") {
+    const zshenvPath = path.join(home, ".zshenv");
+    const action = updateOrAppendEnvVar(zshenvPath, "TRANSCRIPT_API_KEY", key);
+    filesWritten.push({ path: zshenvPath, action, type: "shell-rc" });
+
+    const zprofilePath = path.join(home, ".zprofile");
+    if (fs.existsSync(zprofilePath)) {
+      const action2 = updateOrAppendEnvVar(zprofilePath, "TRANSCRIPT_API_KEY", key);
+      filesWritten.push({ path: zprofilePath, action: action2, type: "shell-rc" });
+    }
+  } else if (platform === "linux") {
+    const profilePath = path.join(home, ".profile");
+    const action1 = updateOrAppendEnvVar(profilePath, "TRANSCRIPT_API_KEY", key);
+    filesWritten.push({ path: profilePath, action: action1, type: "shell-rc" });
+
+    const bashrcPath = path.join(home, ".bashrc");
+    if (fs.existsSync(bashrcPath)) {
+      const action2 = updateOrAppendEnvVar(bashrcPath, "TRANSCRIPT_API_KEY", key);
+      filesWritten.push({ path: bashrcPath, action: action2, type: "shell-rc" });
+    }
+
+    const zshenvPath = path.join(home, ".zshenv");
+    if (fs.existsSync(zshenvPath) || fs.existsSync("/bin/zsh") || fs.existsSync("/usr/bin/zsh")) {
+      const action3 = updateOrAppendEnvVar(zshenvPath, "TRANSCRIPT_API_KEY", key);
+      filesWritten.push({ path: zshenvPath, action: action3, type: "shell-rc" });
+    }
+
+    const systemdDir = path.join(home, ".config", "environment.d");
+    const systemdPath = path.join(systemdDir, "transcript-api.conf");
+    const action4 = updateOrAppendSystemdEnv(systemdPath, "TRANSCRIPT_API_KEY", key);
+    filesWritten.push({ path: systemdPath, action: action4, type: "systemd" });
+  } else if (platform === "win32") {
+    const psProfileDir = path.join(home, "Documents", "WindowsPowerShell");
+    const psProfilePath = path.join(psProfileDir, "Microsoft.PowerShell_profile.ps1");
+    try {
+      ensureDir(psProfileDir);
+      let content = "";
+      if (fs.existsSync(psProfilePath)) {
+        content = fs.readFileSync(psProfilePath, "utf8");
+        content = content.replace(/^\$env:TRANSCRIPT_API_KEY\s*=.*$/gm, "").trim();
+      }
+      content += `\n$env:TRANSCRIPT_API_KEY = "${key}"\n`;
+      fs.writeFileSync(psProfilePath, content);
+      filesWritten.push({ path: psProfilePath, action: "updated", type: "powershell" });
+    } catch (e) {
+      warnings.push(`Could not update PowerShell profile: ${e.message}`);
+    }
+  }
+
+  // =========================================================================
+  // 3. Fish shell (if installed)
+  // =========================================================================
+  const fishConfigDir = path.join(home, ".config", "fish");
+  const fishConfigPath = path.join(fishConfigDir, "config.fish");
+  if (fs.existsSync(fishConfigPath) || fs.existsSync("/usr/bin/fish") || fs.existsSync("/opt/homebrew/bin/fish")) {
+    try {
+      ensureDir(fishConfigDir);
+      let content = "";
+      if (fs.existsSync(fishConfigPath)) {
+        content = fs.readFileSync(fishConfigPath, "utf8");
+        content = content.replace(/^set\s+-gx\s+TRANSCRIPT_API_KEY\s+.*$/gm, "").trim();
+      }
+      content += `\nset -gx TRANSCRIPT_API_KEY ${key}\n`;
+      fs.writeFileSync(fishConfigPath, content);
+      filesWritten.push({ path: fishConfigPath, action: "updated", type: "fish" });
+    } catch (e) {
+      warnings.push(`Could not update fish config: ${e.message}`);
+    }
+  }
+
+  // =========================================================================
+  // 4. Fallback file (for tools that read it directly)
+  // =========================================================================
+  const fallbackPath = path.join(home, ".transcriptapi");
+  fs.writeFileSync(fallbackPath, key + "\n", { mode: 0o600 });
+  filesWritten.push({ path: fallbackPath, action: "written", type: "fallback" });
+
+  return { files: filesWritten, warnings };
+}
+
+// ============================================================================
+// Resolve a session token: prefer --token, fall back to --password login
+// ============================================================================
+
+async function resolveToken(args, humanMode) {
+  if (args.token) {
+    return args.token;
+  }
+  // Legacy fallback: login with email + password
+  if (args.email && args.password) {
+    return await login(args.email, args.password);
+  }
+  return null;
+}
+
+// ============================================================================
+// Commands
+// ============================================================================
+
+async function cmdRegister(args) {
+  const human = isHumanMode(args);
+  const email = args.email;
+  const name = args.name;
+
+  if (!email) err("--email is required", human);
+
+  // Check for obvious temp email domains
+  const tempDomains = ["tempmail", "guerrilla", "10minute", "throwaway", "mailinator", "temp-mail", "fakeinbox", "trashmail"];
+  const emailLower = email.toLowerCase();
+  if (tempDomains.some(d => emailLower.includes(d))) {
+    err("Temporary/disposable emails are not allowed. Please use a real email address.", human);
+  }
+
   try {
-    // =========================================================================
-    // 1. OpenClaw config (PRIMARY for agent skills)
-    // =========================================================================
-    const openclawConfigPath = path.join(home, ".openclaw", "openclaw.json");
-    const legacyConfigPath = path.join(home, ".clawdbot", "moltbot.json");
+    // Server creates account (no password) and returns a short-lived session token
+    const result = await registerCli(email, name);
+    const sessionToken = result.access_token;
 
-    let agentConfigPath = null;
-    let agentConfigUpdated = false;
-
-    // Try openclaw first, then legacy path
-    if (fs.existsSync(openclawConfigPath)) {
-      agentConfigPath = openclawConfigPath;
-    } else if (fs.existsSync(legacyConfigPath)) {
-      agentConfigPath = legacyConfigPath;
-    }
-
-    if (agentConfigPath) {
-      try {
-        const configContent = fs.readFileSync(agentConfigPath, "utf8");
-        // Parse as JSON
-        const config = JSON.parse(configContent);
-        
-        // Ensure skills.entries structure exists
-        if (!config.skills) config.skills = {};
-        if (!config.skills.entries) config.skills.entries = {};
-        
-        // Add/update transcriptapi entry
-        if (!config.skills.entries.transcriptapi) {
-          config.skills.entries.transcriptapi = {};
-        }
-        config.skills.entries.transcriptapi.apiKey = key;
-        config.skills.entries.transcriptapi.enabled = true;
-
-        fs.writeFileSync(agentConfigPath, JSON.stringify(config, null, 2));
-        filesWritten.push({ path: agentConfigPath, action: "updated", type: "openclaw-config" });
-        agentConfigUpdated = true;
-      } catch (e) {
-        warnings.push(`Could not update ${agentConfigPath}: ${e.message}`);
-      }
-    }
-
-    // =========================================================================
-    // 2. Shell RC files (for terminal/CLI usage)
-    // =========================================================================
-    
-    if (platform === "darwin") {
-      // macOS: zsh is default since Catalina (10.15)
-      // ~/.zshenv is read by ALL zsh invocations (scripts, interactive, login)
-      const zshenvPath = path.join(home, ".zshenv");
-      const action = updateOrAppendEnvVar(zshenvPath, "TRANSCRIPT_API_KEY", key);
-      filesWritten.push({ path: zshenvPath, action, type: "shell-rc" });
-
-      // Also add to ~/.zprofile for login shells (belt and suspenders)
-      const zprofilePath = path.join(home, ".zprofile");
-      if (fs.existsSync(zprofilePath)) {
-        const action2 = updateOrAppendEnvVar(zprofilePath, "TRANSCRIPT_API_KEY", key);
-        filesWritten.push({ path: zprofilePath, action: action2, type: "shell-rc" });
-      }
-
-    } else if (platform === "linux") {
-      // Linux: Multiple locations for different scenarios
-      
-      // ~/.profile - POSIX standard, login shells (sh, bash, dash)
-      const profilePath = path.join(home, ".profile");
-      const action1 = updateOrAppendEnvVar(profilePath, "TRANSCRIPT_API_KEY", key);
-      filesWritten.push({ path: profilePath, action: action1, type: "shell-rc" });
-
-      // ~/.bashrc - Interactive bash (many distros source this from .bash_profile)
-      const bashrcPath = path.join(home, ".bashrc");
-      if (fs.existsSync(bashrcPath)) {
-        const action2 = updateOrAppendEnvVar(bashrcPath, "TRANSCRIPT_API_KEY", key);
-        filesWritten.push({ path: bashrcPath, action: action2, type: "shell-rc" });
-      }
-
-      // ~/.zshenv - If user has zsh installed
-      const zshenvPath = path.join(home, ".zshenv");
-      if (fs.existsSync(zshenvPath) || fs.existsSync("/bin/zsh") || fs.existsSync("/usr/bin/zsh")) {
-        const action3 = updateOrAppendEnvVar(zshenvPath, "TRANSCRIPT_API_KEY", key);
-        filesWritten.push({ path: zshenvPath, action: action3, type: "shell-rc" });
-      }
-
-      // ~/.config/environment.d/ - Systemd user services (no 'export' keyword)
-      const systemdDir = path.join(home, ".config", "environment.d");
-      const systemdPath = path.join(systemdDir, "transcript-api.conf");
-      const action4 = updateOrAppendSystemdEnv(systemdPath, "TRANSCRIPT_API_KEY", key);
-      filesWritten.push({ path: systemdPath, action: action4, type: "systemd" });
-
-    } else if (platform === "win32") {
-      // Windows: Use PowerShell profile or just the fallback
-      const psProfileDir = path.join(home, "Documents", "WindowsPowerShell");
-      const psProfilePath = path.join(psProfileDir, "Microsoft.PowerShell_profile.ps1");
-      try {
-        ensureDir(psProfileDir);
-        let content = "";
-        if (fs.existsSync(psProfilePath)) {
-          content = fs.readFileSync(psProfilePath, "utf8");
-          // Remove existing line
-          content = content.replace(/^\$env:TRANSCRIPT_API_KEY\s*=.*$/gm, "").trim();
-        }
-        content += `\n$env:TRANSCRIPT_API_KEY = "${key}"\n`;
-        fs.writeFileSync(psProfilePath, content);
-        filesWritten.push({ path: psProfilePath, action: "updated", type: "powershell" });
-      } catch (e) {
-        warnings.push(`Could not update PowerShell profile: ${e.message}`);
-      }
-    }
-
-    // =========================================================================
-    // 3. Fish shell (if installed)
-    // =========================================================================
-    const fishConfigDir = path.join(home, ".config", "fish");
-    const fishConfigPath = path.join(fishConfigDir, "config.fish");
-    if (fs.existsSync(fishConfigPath) || fs.existsSync("/usr/bin/fish") || fs.existsSync("/opt/homebrew/bin/fish")) {
-      try {
-        ensureDir(fishConfigDir);
-        let content = "";
-        if (fs.existsSync(fishConfigPath)) {
-          content = fs.readFileSync(fishConfigPath, "utf8");
-          // Remove existing line
-          content = content.replace(/^set\s+-gx\s+TRANSCRIPT_API_KEY\s+.*$/gm, "").trim();
-        }
-        content += `\nset -gx TRANSCRIPT_API_KEY ${key}\n`;
-        fs.writeFileSync(fishConfigPath, content);
-        filesWritten.push({ path: fishConfigPath, action: "updated", type: "fish" });
-      } catch (e) {
-        warnings.push(`Could not update fish config: ${e.message}`);
-      }
-    }
-
-    // =========================================================================
-    // 4. Fallback file (for tools that read it directly)
-    // =========================================================================
-    const fallbackPath = path.join(home, ".transcriptapi");
-    fs.writeFileSync(fallbackPath, key + "\n", { mode: 0o600 });
-    filesWritten.push({ path: fallbackPath, action: "written", type: "fallback" });
-
-    // =========================================================================
-    // Output
-    // =========================================================================
-    if (json) {
-      out("", true, { success: true, files: filesWritten, warnings });
+    if (human) {
+      console.log(`\n  Account created. Verification code sent to ${email}.`);
+      console.log(`\n  Ask user: "Check your email for a 6-digit verification code."`);
+      console.log(`\n  Then run: node tapi-auth.js verify --token ${sessionToken} --otp CODE`);
     } else {
+      out("", false, {
+        success: true,
+        email,
+        access_token: sessionToken,
+        access_token_note: "Short-lived server session token for the verify step. Not stored.",
+        next_step: "verify",
+        action_required: "ask_user_for_otp",
+        user_prompt: `Check your email (${email}) for a 6-digit verification code.`,
+        next_command: `npx transcriptapi auth verify --token ${sessionToken} --otp <CODE>`
+      });
+    }
+  } catch (e) {
+    err(e.message, human);
+  }
+}
+
+async function cmdVerify(args) {
+  const human = isHumanMode(args);
+  const otp = args.otp;
+
+  // Require either --token (new flow) or --email + --password (legacy)
+  const token = await resolveToken(args, human);
+  if (!token) err("--token is required (or --email + --password for legacy login)", human);
+  if (!otp) err("--otp is required", human);
+
+  try {
+    // Server verifies OTP using the session token and returns the API key
+    const result = await verifyCli(token, otp);
+    const keyValue = result.api_key;
+
+    // Auto-save the API key to all config files
+    const saved = saveApiKeyToConfigs(keyValue);
+
+    if (human) {
+      console.log(`\n  Email verified!`);
+      console.log(`\n  API Key: ${keyValue}`);
+      console.log(`\n  Key saved to:`);
+      saved.files.forEach((f) => console.log(`    ${f.path}`));
+      if (saved.warnings.length > 0) {
+        console.log(`\n  Warnings:`);
+        saved.warnings.forEach((w) => console.log(`    ${w}`));
+      }
+    } else {
+      out("", false, {
+        success: true,
+        verified: true,
+        api_key: keyValue,
+        saved: { files: saved.files, warnings: saved.warnings },
+      });
+    }
+  } catch (e) {
+    err(e.message, human);
+  }
+}
+
+async function cmdGetKey(args) {
+  const human = isHumanMode(args);
+
+  const token = await resolveToken(args, human);
+  if (!token) err("--token is required (or --email + --password for legacy login)", human);
+
+  try {
+    let keys = await getApiKeys(token);
+    let activeKey = keys.find((k) => k.is_active);
+
+    if (!activeKey) {
+      const newKey = await createApiKey(token);
+      activeKey = newKey;
+    }
+
+    const keyValue = activeKey.key;
+    out(keyValue, human, { api_key: keyValue });
+  } catch (e) {
+    err(e.message, human);
+  }
+}
+
+async function cmdSaveKey(args) {
+  const human = isHumanMode(args);
+  const key = args.key;
+
+  if (!key) err("--key is required", human);
+  if (!key.startsWith("sk_")) err("Key should start with sk_", human);
+
+  try {
+    const saved = saveApiKeyToConfigs(key);
+
+    if (human) {
       console.log("API key saved:\n");
-      
-      const agentFiles = filesWritten.filter(f => f.type === "openclaw-config");
-      const shellFiles = filesWritten.filter(f => f.type === "shell-rc");
-      const otherFiles = filesWritten.filter(f => !["openclaw-config", "shell-rc"].includes(f.type));
-      
+
+      const agentFiles = saved.files.filter(f => f.type === "openclaw-config");
+      const shellFiles = saved.files.filter(f => f.type === "shell-rc");
+      const otherFiles = saved.files.filter(f => !["openclaw-config", "shell-rc"].includes(f.type));
+
       if (agentFiles.length > 0) {
         console.log("  OpenClaw (auto-injected at runtime):");
-        agentFiles.forEach((f) => console.log(`    ✓ ${f.path}`));
+        agentFiles.forEach((f) => console.log(`    ${f.path}`));
         console.log("");
       }
 
       if (shellFiles.length > 0) {
         console.log("  Shell config (for terminal/CLI use):");
-        shellFiles.forEach((f) => console.log(`    ✓ ${f.path}`));
+        shellFiles.forEach((f) => console.log(`    ${f.path}`));
         console.log("");
       }
 
       if (otherFiles.length > 0) {
         console.log("  Other:");
-        otherFiles.forEach((f) => console.log(`    ✓ ${f.path} (${f.type})`));
+        otherFiles.forEach((f) => console.log(`    ${f.path} (${f.type})`));
         console.log("");
       }
 
-      if (warnings.length > 0) {
+      if (saved.warnings.length > 0) {
         console.log("  Warnings:");
-        warnings.forEach((w) => console.log(`    ⚠ ${w}`));
+        saved.warnings.forEach((w) => console.log(`    ${w}`));
         console.log("");
       }
 
+      const platform = process.platform;
       console.log("To use immediately in current shell:");
       if (platform === "darwin") {
         console.log("  source ~/.zshenv");
@@ -582,27 +589,21 @@ async function cmdSaveKey(args) {
       } else {
         console.log("  Restart your terminal or shell");
       }
-      console.log("");
-      
-      if (agentConfigUpdated) {
-        console.log("OpenClaw will auto-inject the key on next agent turn.");
-      }
+    } else {
+      out("", false, { success: true, files: saved.files, warnings: saved.warnings });
     }
   } catch (e) {
-    err(e.message, json);
+    err(e.message, human);
   }
 }
 
 async function cmdStatus(args) {
-  const json = !!args.json;
-  const email = args.email;
-  const password = args.password;
+  const human = isHumanMode(args);
 
-  if (!email) err("--email is required", json);
-  if (!password) err("--password is required", json);
+  const token = await resolveToken(args, human);
+  if (!token) err("--token is required (or --email + --password for legacy login)", human);
 
   try {
-    const token = await login(email, password);
     const me = await getMe(token);
     const keys = await getApiKeys(token);
     let verificationStatus;
@@ -614,8 +615,15 @@ async function cmdStatus(args) {
 
     const activeKeys = keys.filter((k) => k.is_active);
 
-    if (json) {
-      out("", true, {
+    if (human) {
+      console.log("Account Status");
+      console.log("==============");
+      console.log(`Email:    ${me.email}`);
+      console.log(`Name:     ${me.name || "(not set)"}`);
+      console.log(`Verified: ${me.is_verified ? "Yes" : "No"}`);
+      console.log(`API Keys: ${keys.length} total, ${activeKeys.length} active`);
+    } else {
+      out("", false, {
         email: me.email,
         name: me.name,
         is_verified: me.is_verified,
@@ -623,16 +631,9 @@ async function cmdStatus(args) {
         api_keys_count: keys.length,
         active_keys_count: activeKeys.length,
       });
-    } else {
-      console.log("Account Status");
-      console.log("==============");
-      console.log(`Email:    ${me.email}`);
-      console.log(`Name:     ${me.name || "(not set)"}`);
-      console.log(`Verified: ${me.is_verified ? "Yes" : "No"}`);
-      console.log(`API Keys: ${keys.length} total, ${activeKeys.length} active`);
     }
   } catch (e) {
-    err(e.message, json);
+    err(e.message, human);
   }
 }
 
@@ -640,59 +641,34 @@ function cmdHelp() {
   console.log(`
 tapi-auth.js v${VERSION} - TranscriptAPI Account Setup
 
-⚠️  CRITICAL: Do NOT use temporary/disposable emails. They will be blocked.
-    Use a real email address that you control.
+  Creates a TranscriptAPI account and sets up an API key. No passwords
+  are involved — the server sends a one-time verification code to your
+  email, and once verified, the API key is saved automatically to your
+  shell environment (~/.zshenv, ~/.bashrc) and agent config files so
+  it's ready to use immediately.
 
-SETUP STEPS:
-  Step 1: Register account
-          npx transcriptapi auth register --email USER_EMAIL --password USER_PASSWORD
-          → Sends 6-digit OTP to email
-          ⚠️  SAVE THE PASSWORD — you need it again in Step 3!
+  The session token returned during registration is short-lived and
+  single-use — it only authenticates the verify step and is never stored.
+  Use a real email address; disposable/temporary emails are blocked.
 
-  Step 2: Ask user for OTP
-          → User checks their email inbox for the verification code
+USAGE:
 
-  Step 3: Verify email & get API key
-          npx transcriptapi auth verify --email USER_EMAIL --password USER_PASSWORD --otp CODE
-          → Returns API key (sk_...)
-          (Use the SAME password from Step 1)
+  1. Register:  node ./scripts/tapi-auth.js register --email USER_EMAIL
+     → Sends a 6-digit code to your email. Returns a session token.
+     → Ask user: "Check your email for a 6-digit verification code."
 
-  Step 4: Save API key
-          npx transcriptapi auth save-key --key API_KEY
-          → Stores in shell config + agent config (auto-injected at runtime)
+  2. Verify:    node ./scripts/tapi-auth.js verify --token TOKEN --otp CODE
+     → Verifies the code, saves API key automatically. Done.
 
 COMMANDS:
-  register    Create account, sends OTP to email
-  verify      Verify with OTP, returns API key
-  get-key     Get API key (existing verified accounts)
-  save-key    Save API key to environment
-  status      Check account status
-  help        Show this help
+  register    Create account, sends verification code   --email (required), --name
+  verify      Verify code, auto-save API key            --token, --otp
+  get-key     Retrieve existing API key                 --token (or --email --password)
+  save-key    Manually save an API key                  --key
+  status      Check account status                      --token (or --email --password)
 
-OPTIONS:
-  --email EMAIL       User's email (required for register/verify/get-key/status)
-  --password PASSWORD Account password (required for register/verify/get-key/status)
-  --otp CODE          6-digit code from email (required for verify)
-  --key SK_KEY        API key to save (required for save-key)
-  --name NAME         Display name (optional, register only)
-  --json              Machine-readable JSON output
-
-EXAMPLES:
-  npx transcriptapi auth register --email user@example.com --password secret123
-  npx transcriptapi auth verify --email user@example.com --password secret123 --otp 482910
-  npx transcriptapi auth save-key --key sk_abc123...
-  npx transcriptapi auth status --email user@example.com --password secret123 --json
-
-KEY STORAGE (save-key writes to all applicable):
-  Agent config:  ~/.openclaw/openclaw.json → skills.entries.transcriptapi.apiKey
-  Shell:         ~/.zshenv (macOS) | ~/.profile + ~/.bashrc (Linux) | PowerShell (Windows)
-  Fallback:      ~/.transcriptapi (plain file, mode 600)
-
-FOR AI AGENTS:
-  • Use --json for structured output
-  • Register response includes password + pre-filled next_command — use it for verify
-  • After Step 1, prompt user: "Check your email for a 6-digit verification code"
-  • save-key auto-configures the agent runtime (no restart needed)
+FLAGS:
+  --human     Human-readable output (default is JSON)
 `);
 }
 
@@ -730,6 +706,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error(`Fatal: ${e.message}`);
+  console.error(JSON.stringify({ error: e.message }));
   process.exit(1);
 });
