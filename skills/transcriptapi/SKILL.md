@@ -4,7 +4,7 @@ description: Full TranscriptAPI toolkit — fetch YouTube transcripts, search vi
 homepage: https://transcriptapi.com
 metadata:
   {
-    "moltbot":
+    "openclaw":
       {
         "emoji": "📺",
         "requires": { "env": ["TRANSCRIPT_API_KEY"] },
@@ -48,11 +48,17 @@ node ./scripts/tapi-auth.js save-key --key API_KEY --json
 
 Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
 
+## API Reference
+
+Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/openapi.json) — consult this for the latest parameters and schemas.
+
 ## Auth
 
 All requests: `-H "Authorization: Bearer $TRANSCRIPT_API_KEY"`
 
 ## Endpoints
+
+Channel endpoints accept `channel` — an `@handle`, channel URL, or `UC...` ID. No need to resolve first. Playlist endpoints accept `playlist` — a playlist URL or ID.
 
 ### GET /api/v2/youtube/transcript — 1 credit
 
@@ -143,7 +149,7 @@ curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limi
 ### GET /api/v2/youtube/channel/resolve — FREE (0 credits)
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@mkbhd" \
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
@@ -154,7 +160,7 @@ curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@mkbhd" 
 **Response:**
 
 ```json
-{ "channel_id": "UCBcRF18a7Qf58cCRy5xuWwQ", "resolved_from": "@mkbhd" }
+{ "channel_id": "UCsT0YIqwnpJCM-mx7-gSA4Q", "resolved_from": "@TED" }
 ```
 
 If input is already a valid `UC[a-zA-Z0-9_-]{22}` ID, returns immediately without lookup.
@@ -163,7 +169,7 @@ If input is already a valid `UC[a-zA-Z0-9_-]{22}` ID, returns immediately withou
 
 ```bash
 # First page (100 videos)
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel_id=UC_CHANNEL_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 
 # Next pages
@@ -171,12 +177,12 @@ curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TO
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
-| Param          | Required    | Validation                           |
-| -------------- | ----------- | ------------------------------------ |
-| `channel_id`   | conditional | `^UC[a-zA-Z0-9_-]{22}$` (first page) |
-| `continuation` | conditional | non-empty string (next pages)        |
+| Param          | Required    | Validation                                    |
+| -------------- | ----------- | --------------------------------------------- |
+| `channel`      | conditional | `@handle`, channel URL, or `UC...` ID         |
+| `continuation` | conditional | non-empty string (next pages)                 |
 
-Provide exactly one of `channel_id` or `continuation`.
+Provide exactly one of `channel` or `continuation`.
 
 **Response:**
 
@@ -185,15 +191,15 @@ Provide exactly one of `channel_id` or `continuation`.
   "results": [{
     "videoId": "abc123xyz00",
     "title": "Latest Video",
-    "channelId": "UCBcRF18a7Qf58cCRy5xuWwQ",
-    "channelTitle": "MKBHD",
-    "channelHandle": "@mkbhd",
+    "channelId": "UCsT0YIqwnpJCM-mx7-gSA4Q",
+    "channelTitle": "TED",
+    "channelHandle": "@TED",
     "lengthText": "15:22",
     "viewCountText": "3.2M views",
     "thumbnails": [...],
     "index": "0"
   }],
-  "playlist_info": {"title": "Uploads from MKBHD", "numVideos": "1893"},
+  "playlist_info": {"title": "Uploads from TED", "numVideos": "5000"},
   "continuation_token": "4qmFsgKlARIYVVV1...",
   "has_more": true
 }
@@ -202,13 +208,13 @@ Provide exactly one of `channel_id` or `continuation`.
 ### GET /api/v2/youtube/channel/latest — FREE (0 credits)
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel_id=UC_CHANNEL_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
-| Param        | Required | Validation              |
-| ------------ | -------- | ----------------------- |
-| `channel_id` | yes      | `^UC[a-zA-Z0-9_-]{22}$` |
+| Param     | Required | Validation                                |
+| --------- | -------- | ----------------------------------------- |
+| `channel` | yes      | `@handle`, channel URL, or `UC...` ID     |
 
 Returns last 15 videos via RSS with exact view counts and ISO timestamps.
 
@@ -218,8 +224,8 @@ Returns last 15 videos via RSS with exact view counts and ISO timestamps.
 {
   "channel": {
     "channelId": "...",
-    "title": "MKBHD",
-    "author": "MKBHD",
+    "title": "TED",
+    "author": "TED",
     "url": "..."
   },
   "results": [
@@ -240,21 +246,21 @@ Returns last 15 videos via RSS with exact view counts and ISO timestamps.
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
-?channel_id=UC_CHANNEL_ID&q=review&limit=30" \
+?channel=@TED&q=climate+change&limit=30" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
-| Param        | Required | Validation              |
-| ------------ | -------- | ----------------------- |
-| `channel_id` | yes      | `^UC[a-zA-Z0-9_-]{22}$` |
-| `q`          | yes      | 1-200 chars             |
-| `limit`      | no       | 1-50 (default 30)       |
+| Param     | Required | Validation                                |
+| --------- | -------- | ----------------------------------------- |
+| `channel` | yes      | `@handle`, channel URL, or `UC...` ID     |
+| `q`       | yes      | 1-200 chars                               |
+| `limit`   | no       | 1-50 (default 30)                         |
 
 ### GET /api/v2/youtube/playlist/videos — 1 credit/page
 
 ```bash
 # First page
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist_id=PL_PLAYLIST_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 
 # Next pages
@@ -262,10 +268,10 @@ curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=T
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
-| Param          | Required    | Validation                 |
-| -------------- | ----------- | -------------------------- |
-| `playlist_id`  | conditional | starts with PL/UU/LL/FL/OL |
-| `continuation` | conditional | non-empty string           |
+| Param          | Required    | Validation                                           |
+| -------------- | ----------- | ---------------------------------------------------- |
+| `playlist`     | conditional | Playlist URL or ID (`PL`/`UU`/`LL`/`FL`/`OL` prefix) |
+| `continuation` | conditional | non-empty string                                     |
 
 ## Credit Costs
 
@@ -293,7 +299,6 @@ curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=T
 ## Tips
 
 - When user shares YouTube URL with no instruction, fetch transcript and summarize key points.
-- Use `channel/latest` (free) to check for new uploads before fetching transcripts.
-- Combine `channel/resolve` → `channel/videos` for browsing channel uploads.
+- Use `channel/latest` (free) to check for new uploads before fetching transcripts — pass @handle directly.
 - For research: search → pick videos → fetch transcripts.
 - Free tier: 100 credits, 300 req/min. Starter ($5/mo): 1,000 credits, 300 req/min.

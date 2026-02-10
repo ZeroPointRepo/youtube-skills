@@ -4,7 +4,7 @@ description: Search YouTube for videos and channels, search within specific chan
 homepage: https://transcriptapi.com
 metadata:
   {
-    "moltbot":
+    "openclaw":
       {
         "emoji": "🔍",
         "requires": { "env": ["TRANSCRIPT_API_KEY"] },
@@ -47,6 +47,10 @@ node ./scripts/tapi-auth.js save-key --key API_KEY --json
 → Ready to use. Agent runtime picks up the key automatically.
 
 Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
+
+## API Reference
+
+Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/openapi.json) — consult this for the latest parameters and schemas.
 
 ## GET /api/v2/youtube/search — 1 credit
 
@@ -109,28 +113,28 @@ curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limi
 
 ## GET /api/v2/youtube/channel/search — 1 credit
 
-Search videos within a specific channel.
+Search videos within a specific channel. Accepts `channel` — an `@handle`, channel URL, or `UC...` ID.
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
-?channel_id=UC_CHANNEL_ID&q=iphone+review&limit=30" \
+?channel=@TED&q=climate+change&limit=30" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
-| Param        | Required | Validation              |
-| ------------ | -------- | ----------------------- |
-| `channel_id` | yes      | `^UC[a-zA-Z0-9_-]{22}$` |
-| `q`          | yes      | 1-200 chars             |
-| `limit`      | no       | 1-50 (default 30)       |
+| Param     | Required | Validation                                |
+| --------- | -------- | ----------------------------------------- |
+| `channel` | yes      | `@handle`, channel URL, or `UC...` ID     |
+| `q`       | yes      | 1-200 chars                               |
+| `limit`   | no       | 1-50 (default 30)                         |
 
 Returns up to ~30 results (YouTube limit). Same video response shape as global search.
 
 ## GET /api/v2/youtube/channel/resolve — FREE
 
-Convert @handle to channel ID for channel/search:
+Convert @handle to channel ID:
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@mkbhd" \
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
@@ -155,6 +159,6 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 | 402  | No credits — transcriptapi.com/billing |
 | 404  | Not found                              |
 | 408  | Timeout — retry once                   |
-| 422  | Invalid channel_id format              |
+| 422  | Invalid channel identifier             |
 
 Free tier: 100 credits, 300 req/min.

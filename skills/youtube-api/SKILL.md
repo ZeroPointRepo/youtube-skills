@@ -4,7 +4,7 @@ description: YouTube API access without the official API quota hassle — transc
 homepage: https://transcriptapi.com
 metadata:
   {
-    "moltbot":
+    "openclaw":
       {
         "emoji": "⚡",
         "requires": { "env": ["TRANSCRIPT_API_KEY"] },
@@ -48,19 +48,25 @@ node ./scripts/tapi-auth.js save-key --key API_KEY --json
 
 Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
 
+## API Reference
+
+Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/openapi.json) — consult this for the latest parameters and schemas.
+
 ## Endpoint Reference
 
 All endpoints: `https://transcriptapi.com/api/v2/youtube/...`
 
-| Endpoint                               | Method | Cost     |
-| -------------------------------------- | ------ | -------- |
-| `/transcript?video_url=ID`             | GET    | 1        |
-| `/search?q=QUERY&type=video`           | GET    | 1        |
-| `/channel/resolve?input=@handle`       | GET    | **free** |
-| `/channel/latest?channel_id=UC_ID`     | GET    | **free** |
-| `/channel/videos?channel_id=UC_ID`     | GET    | 1/page   |
-| `/channel/search?channel_id=UC_ID&q=Q` | GET    | 1        |
-| `/playlist/videos?playlist_id=PL_ID`   | GET    | 1/page   |
+Channel endpoints accept `channel` — an `@handle`, channel URL, or `UC...` ID. Playlist endpoints accept `playlist` — a playlist URL or ID.
+
+| Endpoint                            | Method | Cost     |
+| ----------------------------------- | ------ | -------- |
+| `/transcript?video_url=ID`          | GET    | 1        |
+| `/search?q=QUERY&type=video`        | GET    | 1        |
+| `/channel/resolve?input=@handle`    | GET    | **free** |
+| `/channel/latest?channel=@handle`   | GET    | **free** |
+| `/channel/videos?channel=@handle`   | GET    | 1/page   |
+| `/channel/search?channel=@handle&q=Q` | GET  | 1        |
+| `/playlist/videos?playlist=PL_ID`   | GET    | 1/page   |
 
 ## Quick Examples
 
@@ -83,21 +89,21 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 **Resolve channel handle (free):**
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@mkbhd" \
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
 **Latest videos (free):**
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel_id=UC_CHANNEL_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
 **Browse channel uploads (paginated):**
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel_id=UC_CHANNEL_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 # Use continuation token from response for next pages
 ```
@@ -105,19 +111,19 @@ curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel_id=UC_C
 **Browse playlist (paginated):**
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist_id=PL_PLAYLIST_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
 ## Parameter Validation
 
-| Field          | Rule                                        |
-| -------------- | ------------------------------------------- |
-| `channel_id`   | `^UC[a-zA-Z0-9_-]{22}$` (24 chars total)    |
-| `playlist_id`  | starts with `PL`, `UU`, `LL`, `FL`, or `OL` |
-| `q` (search)   | 1-200 chars                                 |
-| `limit`        | 1-50                                        |
-| `continuation` | non-empty string                            |
+| Field          | Rule                                                    |
+| -------------- | ------------------------------------------------------- |
+| `channel`      | `@handle`, channel URL, or `UC...` ID                   |
+| `playlist`     | Playlist URL or ID (`PL`/`UU`/`LL`/`FL`/`OL` prefix)   |
+| `q` (search)   | 1-200 chars                                             |
+| `limit`        | 1-50                                                    |
+| `continuation` | non-empty string                                        |
 
 ## Why Not Google's API?
 

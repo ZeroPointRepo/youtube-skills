@@ -4,7 +4,7 @@ description: Get subtitles from YouTube videos for translation, language learnin
 homepage: https://transcriptapi.com
 metadata:
   {
-    "moltbot":
+    "openclaw":
       {
         "emoji": "🗨️",
         "requires": { "env": ["TRANSCRIPT_API_KEY"] },

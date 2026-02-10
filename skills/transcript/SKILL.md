@@ -4,7 +4,7 @@ description: Get transcripts from any YouTube video — for summarization, resea
 homepage: https://transcriptapi.com
 metadata:
   {
-    "moltbot":
+    "openclaw":
       {
         "emoji": "📝",
         "requires": { "env": ["TRANSCRIPT_API_KEY"] },

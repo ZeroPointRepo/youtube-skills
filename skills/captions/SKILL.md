@@ -4,7 +4,7 @@ description: Extract closed captions and subtitles from YouTube videos. Use when
 homepage: https://transcriptapi.com
 metadata:
   {
-    "moltbot":
+    "openclaw":
       {
         "emoji": "💬",
         "requires": { "env": ["TRANSCRIPT_API_KEY"] },

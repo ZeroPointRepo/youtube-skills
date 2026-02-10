@@ -4,7 +4,7 @@ description: Browse YouTube playlists and fetch video transcripts. Use when the 
 homepage: https://transcriptapi.com
 metadata:
   {
-    "moltbot":
+    "openclaw":
       {
         "emoji": "📋",
         "requires": { "env": ["TRANSCRIPT_API_KEY"] },
@@ -48,13 +48,17 @@ node ./scripts/tapi-auth.js save-key --key API_KEY --json
 
 Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
 
+## API Reference
+
+Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/openapi.json) — consult this for the latest parameters and schemas.
+
 ## GET /api/v2/youtube/playlist/videos — 1 credit/page
 
-Paginated playlist video listing (100 per page).
+Paginated playlist video listing (100 per page). Accepts `playlist` — a YouTube playlist URL or playlist ID.
 
 ```bash
 # First page
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist_id=PL_PLAYLIST_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 
 # Next pages
@@ -62,12 +66,12 @@ curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=T
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
-| Param          | Required    | Validation                                  |
-| -------------- | ----------- | ------------------------------------------- |
-| `playlist_id`  | conditional | starts with `PL`, `UU`, `LL`, `FL`, or `OL` |
-| `continuation` | conditional | non-empty string                            |
+| Param          | Required    | Validation                                           |
+| -------------- | ----------- | ---------------------------------------------------- |
+| `playlist`     | conditional | Playlist URL or ID (`PL`/`UU`/`LL`/`FL`/`OL` prefix) |
+| `continuation` | conditional | non-empty string                                     |
 
-Provide exactly one of `playlist_id` or `continuation`, not both.
+Provide exactly one of `playlist` or `continuation`, not both.
 
 **Accepted playlist ID prefixes:**
 
@@ -95,10 +99,10 @@ Provide exactly one of `playlist_id` or `continuation`, not both.
     }
   ],
   "playlist_info": {
-    "title": "Best Tech of 2025",
+    "title": "Best Science Talks",
     "numVideos": "47",
-    "description": "My picks for the best tech this year",
-    "ownerName": "MKBHD",
+    "description": "Top science presentations",
+    "ownerName": "TED",
     "viewCount": "5000000"
   },
   "continuation_token": "4qmFsgKlARIYVVV1...",
@@ -108,7 +112,7 @@ Provide exactly one of `playlist_id` or `continuation`, not both.
 
 **Pagination flow:**
 
-1. First request: `?playlist_id=PLxxx` — returns first 100 videos + `continuation_token`
+1. First request: `?playlist=PLxxx` — returns first 100 videos + `continuation_token`
 2. Next request: `?continuation=TOKEN` — returns next 100 + new token
 3. Repeat until `has_more: false` or `continuation_token: null`
 
@@ -116,7 +120,7 @@ Provide exactly one of `playlist_id` or `continuation`, not both.
 
 ```bash
 # 1. List playlist videos
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist_id=PL_PLAYLIST_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 
 # 2. Get transcript from a video in the playlist
@@ -127,16 +131,16 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 
 ## Extract playlist ID from URL
 
-From `https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf`, the playlist ID is `PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf`.
+From `https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf`, the playlist ID is `PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf`. You can also pass the full URL directly to the `playlist` parameter.
 
 ## Errors
 
-| Code | Meaning                    | Action                                             |
-| ---- | -------------------------- | -------------------------------------------------- |
-| 400  | Both or neither params     | Provide exactly one of playlist_id or continuation |
-| 402  | No credits                 | transcriptapi.com/billing                          |
-| 404  | Playlist not found         | Check if playlist is public                        |
-| 408  | Timeout                    | Retry once                                         |
-| 422  | Invalid playlist_id format | Must start with PL/UU/LL/FL/OL                     |
+| Code | Meaning                    | Action                                           |
+| ---- | -------------------------- | ------------------------------------------------ |
+| 400  | Both or neither params     | Provide exactly one of playlist or continuation  |
+| 402  | No credits                 | transcriptapi.com/billing                        |
+| 404  | Playlist not found         | Check if playlist is public                      |
+| 408  | Timeout                    | Retry once                                       |
+| 422  | Invalid playlist format    | Must be a valid playlist URL or ID               |
 
 1 credit per page. Free tier: 100 credits, 300 req/min.

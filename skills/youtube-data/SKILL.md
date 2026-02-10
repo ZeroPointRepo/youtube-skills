@@ -4,7 +4,7 @@ description: Access YouTube video data — transcripts, metadata, channel info, 
 homepage: https://transcriptapi.com
 metadata:
   {
-    "moltbot":
+    "openclaw":
       {
         "emoji": "📊",
         "requires": { "env": ["TRANSCRIPT_API_KEY"] },
@@ -48,6 +48,10 @@ node ./scripts/tapi-auth.js save-key --key API_KEY --json
 
 Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
 
+## API Reference
+
+Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/openapi.json) — consult this for the latest parameters and schemas.
+
 ## Video Data (transcript + metadata) — 1 credit
 
 ```bash
@@ -87,19 +91,21 @@ curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limi
 
 ## Channel Data
 
+Channel endpoints accept `channel` — an `@handle`, channel URL, or `UC...` ID. No need to resolve first.
+
 **Resolve handle to ID (free):**
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@mkbhd" \
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
-Returns: `{"channel_id": "UCBcRF18a7Qf58cCRy5xuWwQ", "resolved_from": "@mkbhd"}`
+Returns: `{"channel_id": "UCsT0YIqwnpJCM-mx7-gSA4Q", "resolved_from": "@TED"}`
 
 **Latest 15 videos with exact stats (free):**
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel_id=UC_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
@@ -108,7 +114,7 @@ Returns: `channel` info, `results` array with `videoId`, `title`, `published` (I
 **All channel videos (paginated, 1 credit/page):**
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel_id=UC_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
@@ -118,14 +124,16 @@ Returns 100 videos per page + `continuation_token` for pagination.
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
-?channel_id=UC_ID&q=QUERY&limit=30" \
+?channel=@TED&q=QUERY&limit=30" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
 ## Playlist Data — 1 credit/page
 
+Accepts `playlist` — a YouTube playlist URL or playlist ID.
+
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist_id=PL_ID" \
+curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_ID" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 

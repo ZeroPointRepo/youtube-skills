@@ -4,7 +4,7 @@ description: Extract full transcripts from video content for analysis, summariza
 homepage: https://transcriptapi.com
 metadata:
   {
-    "moltbot":
+    "openclaw":
       {
         "emoji": "🎬",
         "requires": { "env": ["TRANSCRIPT_API_KEY"] },

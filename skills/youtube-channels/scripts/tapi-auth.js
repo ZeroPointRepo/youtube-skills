@@ -403,19 +403,19 @@ async function cmdSaveKey(args) {
 
   try {
     // =========================================================================
-    // 1. OpenClaw/Moltbot config (PRIMARY for agent skills)
+    // 1. OpenClaw config (PRIMARY for agent skills)
     // =========================================================================
-    const moltbotConfigPath = path.join(home, ".clawdbot", "moltbot.json");
     const openclawConfigPath = path.join(home, ".openclaw", "openclaw.json");
-    
+    const legacyConfigPath = path.join(home, ".clawdbot", "moltbot.json");
+
     let agentConfigPath = null;
     let agentConfigUpdated = false;
-    
-    // Try moltbot first, then openclaw
-    if (fs.existsSync(moltbotConfigPath)) {
-      agentConfigPath = moltbotConfigPath;
-    } else if (fs.existsSync(openclawConfigPath)) {
+
+    // Try openclaw first, then legacy path
+    if (fs.existsSync(openclawConfigPath)) {
       agentConfigPath = openclawConfigPath;
+    } else if (fs.existsSync(legacyConfigPath)) {
+      agentConfigPath = legacyConfigPath;
     }
 
     if (agentConfigPath) {
@@ -551,7 +551,7 @@ async function cmdSaveKey(args) {
       const otherFiles = filesWritten.filter(f => !["openclaw-config", "shell-rc"].includes(f.type));
       
       if (agentFiles.length > 0) {
-        console.log("  OpenClaw/Moltbot (auto-injected at runtime):");
+        console.log("  OpenClaw (auto-injected at runtime):");
         agentFiles.forEach((f) => console.log(`    ✓ ${f.path}`));
         console.log("");
       }
@@ -585,7 +585,7 @@ async function cmdSaveKey(args) {
       console.log("");
       
       if (agentConfigUpdated) {
-        console.log("OpenClaw/Moltbot will auto-inject the key on next agent turn.");
+        console.log("OpenClaw will auto-inject the key on next agent turn.");
       }
     }
   } catch (e) {
@@ -684,7 +684,7 @@ EXAMPLES:
   npx transcriptapi auth status --email user@example.com --password secret123 --json
 
 KEY STORAGE (save-key writes to all applicable):
-  Agent config:  ~/.clawdbot/moltbot.json → skills.entries.transcriptapi.apiKey
+  Agent config:  ~/.openclaw/openclaw.json → skills.entries.transcriptapi.apiKey
   Shell:         ~/.zshenv (macOS) | ~/.profile + ~/.bashrc (Linux) | PowerShell (Windows)
   Fallback:      ~/.transcriptapi (plain file, mode 600)
 
