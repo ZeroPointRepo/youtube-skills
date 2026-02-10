@@ -7,7 +7,7 @@ metadata:
     "openclaw":
       {
         "emoji": "⚡",
-        "requires": { "env": ["TRANSCRIPT_API_KEY"] },
+        "requires": { "env": ["TRANSCRIPT_API_KEY"], "bins": ["node"] },
         "primaryEnv": "TRANSCRIPT_API_KEY",
       },
   }
@@ -35,7 +35,7 @@ node ./scripts/tapi-auth.js register --email USER_EMAIL
 node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
 ```
 
-→ API key saved automatically. Ready to use.
+→ API key saved to your shell profile (~/.zshenv on macOS, ~/.bashrc on Linux, PowerShell profile on Windows) and ~/.transcriptapi. Ready to use.
 
 Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
 
