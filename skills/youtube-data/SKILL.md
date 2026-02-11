@@ -3,15 +3,7 @@ name: youtube-data
 description: Access YouTube video data — transcripts, metadata, channel info, search, and playlists. A lightweight alternative to Google's YouTube Data API with no quota limits. Use when the user needs structured data from YouTube videos, channels, or playlists without dealing with Google API setup, OAuth, or daily quotas.
 homepage: https://transcriptapi.com
 user-invocable: true
-metadata:
-  {
-    "openclaw":
-      {
-        "emoji": "📊",
-        "requires": { "env": ["TRANSCRIPT_API_KEY"], "bins": ["node"] },
-        "primaryEnv": "TRANSCRIPT_API_KEY",
-      },
-  }
+metadata: {"openclaw":{"emoji":"📊","requires":{"env":["TRANSCRIPT_API_KEY"],"bins":["node"]},"primaryEnv":"TRANSCRIPT_API_KEY"}}
 ---
 
 # YouTube Data

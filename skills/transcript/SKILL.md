@@ -3,15 +3,7 @@ name: transcript
 description: Get transcripts from any YouTube video — for summarization, research, translation, quoting, or content analysis. Use when the user shares a video link or asks "what did they say", "get the transcript", "transcribe this video", "summarize this video", or wants to analyze spoken content.
 homepage: https://transcriptapi.com
 user-invocable: true
-metadata:
-  {
-    "openclaw":
-      {
-        "emoji": "📝",
-        "requires": { "env": ["TRANSCRIPT_API_KEY"], "bins": ["node"] },
-        "primaryEnv": "TRANSCRIPT_API_KEY",
-      },
-  }
+metadata: {"openclaw":{"emoji":"📝","requires":{"env":["TRANSCRIPT_API_KEY"],"bins":["node"]},"primaryEnv":"TRANSCRIPT_API_KEY"}}
 ---
 
 # Transcript

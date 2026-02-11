@@ -3,15 +3,7 @@ name: captions
 description: Extract closed captions and subtitles from YouTube videos. Use when the user asks for captions, closed captions, CC, accessibility text, or wants to read what was said in a video. Supports timestamps and multiple languages. Great for deaf/HoH accessibility, content review, quoting, and translation.
 homepage: https://transcriptapi.com
 user-invocable: true
-metadata:
-  {
-    "openclaw":
-      {
-        "emoji": "💬",
-        "requires": { "env": ["TRANSCRIPT_API_KEY"], "bins": ["node"] },
-        "primaryEnv": "TRANSCRIPT_API_KEY",
-      },
-  }
+metadata: {"openclaw":{"emoji":"💬","requires":{"env":["TRANSCRIPT_API_KEY"],"bins":["node"]},"primaryEnv":"TRANSCRIPT_API_KEY"}}
 ---
 
 # Captions

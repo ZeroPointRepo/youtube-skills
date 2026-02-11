@@ -3,15 +3,7 @@ name: youtube-channels
 description: Work with YouTube channels — resolve handles to IDs, browse uploads, get latest videos, search within channels. Use when the user asks about a specific channel, wants to see recent uploads, or says "what has X posted lately", "latest from TED", "show me their channel", "list channel videos", "browse channel uploads".
 homepage: https://transcriptapi.com
 user-invocable: true
-metadata:
-  {
-    "openclaw":
-      {
-        "emoji": "📡",
-        "requires": { "env": ["TRANSCRIPT_API_KEY"], "bins": ["node"] },
-        "primaryEnv": "TRANSCRIPT_API_KEY",
-      },
-  }
+metadata: {"openclaw":{"emoji":"📡","requires":{"env":["TRANSCRIPT_API_KEY"],"bins":["node"]},"primaryEnv":"TRANSCRIPT_API_KEY"}}
 ---
 
 # YouTube Channels

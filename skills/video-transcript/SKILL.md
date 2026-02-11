@@ -3,15 +3,7 @@ name: video-transcript
 description: Extract full transcripts from video content for analysis, summarization, note-taking, or research. Use when the user wants a written version of video content, asks to "transcribe this", "get the text from this video", "convert video to text", or shares a video URL for content extraction.
 homepage: https://transcriptapi.com
 user-invocable: true
-metadata:
-  {
-    "openclaw":
-      {
-        "emoji": "🎬",
-        "requires": { "env": ["TRANSCRIPT_API_KEY"], "bins": ["node"] },
-        "primaryEnv": "TRANSCRIPT_API_KEY",
-      },
-  }
+metadata: {"openclaw":{"emoji":"🎬","requires":{"env":["TRANSCRIPT_API_KEY"],"bins":["node"]},"primaryEnv":"TRANSCRIPT_API_KEY"}}
 ---
 
 # Video Transcript
