@@ -22,7 +22,7 @@
 // Source: https://transcriptapi.com | Docs: https://docs.transcriptapi.com
 // ============================================================================
 
-const VERSION = "2.0.0";
+const VERSION = "2.1.0";
 const BASE_URL = "https://transcriptapi.com/api/auth";
 
 // ============================================================================
@@ -225,8 +225,19 @@ function ensureDir(dir) {
   }
 }
 
+// Back up existing file before modification. Returns backup path or null.
+function backupFile(filePath) {
+  if (fs.existsSync(filePath)) {
+    const backupPath = filePath + ".bak";
+    fs.copyFileSync(filePath, backupPath);
+    return backupPath;
+  }
+  return null;
+}
+
 function updateOrAppendEnvVar(filePath, varName, value) {
   ensureDir(path.dirname(filePath));
+  backupFile(filePath);
 
   let content = "";
   let updated = false;
@@ -261,6 +272,7 @@ function updateOrAppendEnvVar(filePath, varName, value) {
 
 function updateOrAppendSystemdEnv(filePath, varName, value) {
   ensureDir(path.dirname(filePath));
+  backupFile(filePath);
 
   let content = "";
   let updated = false;
@@ -317,6 +329,7 @@ function saveApiKeyToConfigs(key) {
 
   if (agentConfigPath) {
     try {
+      backupFile(agentConfigPath);
       const configContent = fs.readFileSync(agentConfigPath, "utf8");
       const config = JSON.parse(configContent);
 
@@ -375,6 +388,7 @@ function saveApiKeyToConfigs(key) {
     const psProfilePath = path.join(psProfileDir, "Microsoft.PowerShell_profile.ps1");
     try {
       ensureDir(psProfileDir);
+      backupFile(psProfilePath);
       let content = "";
       if (fs.existsSync(psProfilePath)) {
         content = fs.readFileSync(psProfilePath, "utf8");
@@ -396,6 +410,7 @@ function saveApiKeyToConfigs(key) {
   if (fs.existsSync(fishConfigPath) || fs.existsSync("/usr/bin/fish") || fs.existsSync("/opt/homebrew/bin/fish")) {
     try {
       ensureDir(fishConfigDir);
+      backupFile(fishConfigPath);
       let content = "";
       if (fs.existsSync(fishConfigPath)) {
         content = fs.readFileSync(fishConfigPath, "utf8");
@@ -413,6 +428,7 @@ function saveApiKeyToConfigs(key) {
   // 4. Fallback file (for tools that read it directly)
   // =========================================================================
   const fallbackPath = path.join(home, ".transcriptapi");
+  backupFile(fallbackPath);
   fs.writeFileSync(fallbackPath, key + "\n", { mode: 0o600 });
   filesWritten.push({ path: fallbackPath, action: "written", type: "fallback" });
 
