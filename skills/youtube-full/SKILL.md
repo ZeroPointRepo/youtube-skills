@@ -2,6 +2,7 @@
 name: youtube-full
 description: Complete YouTube toolkit — transcripts, search, channels, playlists, and metadata all in one skill. Use when you need comprehensive YouTube access, want to search and then get transcripts, browse channel content, work with playlists, or need the full suite of YouTube data endpoints. The all-in-one YouTube skill for agents.
 homepage: https://transcriptapi.com
+user-invocable: true
 metadata:
   {
     "openclaw":

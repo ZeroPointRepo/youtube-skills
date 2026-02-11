@@ -2,6 +2,7 @@
 name: transcriptapi
 description: Full TranscriptAPI toolkit — fetch YouTube transcripts, search videos and channels, browse channel uploads, get latest videos, and explore playlists. Use when the user wants to work with YouTube content programmatically, get transcripts for summarization or analysis, find videos, or monitor channels. Triggers on YouTube URLs, "transcript", "transcriptapi", "video summary", "what did they say", "find videos about", "search youtube".
 homepage: https://transcriptapi.com
+user-invocable: true
 metadata:
   {
     "openclaw":

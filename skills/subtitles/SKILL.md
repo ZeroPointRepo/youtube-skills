@@ -2,6 +2,7 @@
 name: subtitles
 description: Get subtitles from YouTube videos for translation, language learning, or reading along. Use when the user asks for subtitles, subs, foreign language text, or wants to read video content. Supports multiple languages and timestamped output for sync'd reading.
 homepage: https://transcriptapi.com
+user-invocable: true
 metadata:
   {
     "openclaw":
