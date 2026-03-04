@@ -94,7 +94,7 @@ Accepts: full URLs (`youtube.com/watch?v=ID`), short URLs (`youtu.be/ID`), short
 | ---- | ------------- | ----------------------------------- |
 | 401  | Bad API key   | Check key or re-setup               |
 | 402  | No credits    | Top up at transcriptapi.com/billing |
-| 404  | No transcript | Video may not have captions enabled |
+| 404  | No transcript | Video exists but has no captions. Public videos often lack captions. |
 | 408  | Timeout       | Retry once after 2s                 |
 | 429  | Rate limited  | Wait and retry                      |
 

@@ -270,14 +270,16 @@ curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=T
 
 ## Errors
 
-| Code | Meaning           | Action                                              |
-| ---- | ----------------- | --------------------------------------------------- |
-| 401  | Bad API key       | Check key, re-run setup                             |
-| 402  | No credits        | Top up at transcriptapi.com/billing                 |
-| 404  | Not found         | Video/channel/playlist doesn't exist or no captions |
-| 408  | Timeout/retryable | Retry once after 2s                                 |
-| 422  | Validation error  | Check param format                                  |
-| 429  | Rate limited      | Wait, respect Retry-After                           |
+| Code | Meaning                | Action                                                                                                                                                                                                                   |
+| ---- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 401  | Bad API key            | Check key, re-run setup                                                                                                                                                                                                   |
+| 402  | No credits             | Top up at transcriptapi.com/billing                                                                                                                                                                                       |
+| 404  | No transcript available | Video/channel/playlist exists but has no captions. **This is common** — public videos often don't have captions. Check YouTube directly for the video. |
+| 408  | Timeout/retryable      | Retry once after 2s                                                                                                                                                                                                       |
+| 422  | Validation error       | Check param format                                                                                                                                                                                                        |
+| 429  | Rate limited           | Wait, respect Retry-After                                                                                                                                                                                                 |
+
+> **Why does my video return 404 even though it's public?** A public video may not have captions enabled. YouTube requires either auto-generated captions (which may fail for poor audio) or manually uploaded subtitles. The transcript API cannot generate captions from audio — it can only retrieve existing caption tracks.
 
 ## Tips
 

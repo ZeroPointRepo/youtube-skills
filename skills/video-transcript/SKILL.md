@@ -95,7 +95,7 @@ Accepted URL formats:
 | ---- | ------------- | ----------------------------------- |
 | 401  | Bad API key   | Check key or re-setup               |
 | 402  | No credits    | Top up at transcriptapi.com/billing |
-| 404  | No transcript | Video may not have captions enabled |
+| 404  | No transcript | Video exists but has no captions. Public videos often lack captions. |
 | 408  | Timeout       | Retry once after 2s                 |
 
 1 credit per successful request. Errors don't consume credits. Free tier: 100 credits, 300 req/min.

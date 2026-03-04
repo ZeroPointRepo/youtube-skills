@@ -61,6 +61,8 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 }
 ```
 
+> **Note:** If you get a 404 error, the video exists but has no available captions. This is common for public videos — YouTube doesn't auto-generate captions for all videos, especially those with poor audio quality or in certain languages.
+
 ## Search — 1 credit
 
 ```bash
@@ -162,14 +164,16 @@ Valid ID prefixes: `PL`, `UU`, `LL`, `FL`, `OL`. Response includes `playlist_inf
 
 ## Errors
 
-| Code | Meaning          | Action                                |
-| ---- | ---------------- | ------------------------------------- |
-| 401  | Bad API key      | Check key                             |
-| 402  | No credits       | transcriptapi.com/billing             |
-| 404  | Not found        | Resource doesn't exist or no captions |
-| 408  | Timeout          | Retry once after 2s                   |
-| 422  | Validation error | Check param format                    |
-| 429  | Rate limited     | Wait, respect Retry-After             |
+| Code | Meaning                   | Action                                                                                                                                                                                                 |
+| ---- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 401  | Bad API key              | Check key                                                                                                                                                                                              |
+| 402  | No credits               | Top up at transcriptapi.com/billing                                                                                                                                                                   |
+| 404  | No transcript available  | Video exists but has no captions/subtitles. **This is the most common cause** — public videos often don't have captions. Check YouTube directly: click the transcript button under the video. |
+| 408  | Timeout                  | Retry once after 2s                                                                                                                                                                                    |
+| 422  | Validation error          | Check param format                                                                                                                                                                                     |
+| 429  | Rate limited              | Wait, respect Retry-After                                                                                                                                                                              |
+
+> **Why does my video return 404 even though it's public?** A public video may not have captions enabled. YouTube requires either auto-generated captions (which may fail for poor audio) or manually uploaded subtitles. The transcript API cannot generate captions from audio — it can only retrieve existing caption tracks.
 
 ## Typical Workflows
 

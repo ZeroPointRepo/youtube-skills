@@ -48,6 +48,8 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 
 Accepts: full URLs (`youtube.com/watch?v=ID`), short URLs (`youtu.be/ID`), shorts (`youtube.com/shorts/ID`), or bare video IDs.
 
+> **Prerequisite:** Before requesting a transcript, verify the video has captions available. On YouTube, click the "Transcript" button below the video. If no transcript button appears, the video doesn't have captions and the API will return 404.
+
 **Default:** Always use `format=text&include_timestamp=true&send_metadata=true` unless user specifies otherwise.
 
 **Response** (`format=json`):
@@ -82,13 +84,15 @@ Accepts: full URLs (`youtube.com/watch?v=ID`), short URLs (`youtu.be/ID`), short
 
 ## Errors
 
-| Code | Meaning       | Action                              |
-| ---- | ------------- | ----------------------------------- |
-| 401  | Bad API key   | Check key or re-setup               |
-| 402  | No credits    | Top up at transcriptapi.com/billing |
-| 404  | No transcript | Video may not have captions enabled |
-| 408  | Timeout       | Retry once after 2s                 |
-| 429  | Rate limited  | Wait and retry                      |
+| Code | Meaning              | Action                                                                                                                                                                                                 |
+| ---- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 401  | Bad API key          | Check key or re-setup                                                                                                                                                                                  |
+| 402  | No credits           | Top up at transcriptapi.com/billing                                                                                                                                                                   |
+| 404  | No transcript avail | Video exists but has no captions/subtitles. **This is common** — public videos often don't have captions enabled. Check YouTube directly: click the transcript button under the video. |
+| 408  | Timeout              | Retry once after 2s                                                                                                                                                                                    |
+| 429  | Rate limited         | Wait and retry                                                                                                                                                                                        |
+
+> **Why does my video return 404 even though it's public?** A public video may not have captions enabled. YouTube requires either auto-generated captions (which may fail for poor audio) or manually uploaded subtitles. The transcript API cannot generate captions from audio — it can only retrieve existing caption tracks.
 
 ## Tips
 
