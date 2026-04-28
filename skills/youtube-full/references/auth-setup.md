@@ -118,10 +118,10 @@ Clean up any temporary files you created during this process.
 You let the response pass through tool output instead of writing it to a file first. Some agent runtimes (notably Hermes) redact values matching patterns like `access_token`, `api_key`, or `sk_` from command output before the model sees them. Always write the raw HTTP response body to a temp file and read the value from there.
 
 **Hermes agents: env var is set but not available in the next tool call.**  
-Hermes sandboxes `execute_code` and `terminal` calls. Setting an env var in one call does not carry over to the next unless the variable is declared in the skill's `required_environment_variables` frontmatter. If you are operating inside a Hermes skill context, check whether the variable is already declared for passthrough. If not, write the key to the agent's `.env` file at `~/.hermes/.env` so Hermes picks it up on the next load.
+Hermes sandboxes `execute_code` and `terminal` calls. Setting an env var in one call does not carry over to the next unless the variable is declared in the skill's `required_environment_variables` frontmatter. If you are operating inside a Hermes skill context, check whether the variable is already declared for passthrough. If not, persist the key using the agent's normal environment-secret mechanism so Hermes picks it up on the next load.
 
 **Claude Code agents: key is saved to shell profile but `$TRANSCRIPT_API_KEY` is still empty.**  
-Writing to `~/.zshenv` or `~/.profile` only affects new shell sessions. The current session does not reload profile files automatically. Either source the file explicitly in the current session, or use the Write tool to set the value in whatever config file Claude Code reads at runtime.
+Writing to shell startup files only affects new shell sessions. The current session does not reload profile files automatically. Either source the file explicitly in the current session, or use the Write tool to set the value in whatever config file Claude Code reads at runtime.
 
 **The registration request returns 409 "Account already exists".**  
 The email is already registered and verified. Switch to Path A — ask the user to paste their key from the dashboard at transcriptapi.com/dashboard.
