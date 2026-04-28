@@ -1,7 +1,7 @@
 ---
 name: video-transcript
-description: Use when video content needs to be extracted as text: pasted YouTube links or IDs, requests to transcribe, summarize, quote, translate, convert video to text, or extract information from video content. Also use when a user shares a video URL without explanation and wants to know what it says. Not for uploads or account management.
-homepage: https://transcriptapi.com
+description: "Use when video content needs to be extracted as text: pasted YouTube links or IDs, requests to transcribe, summarize, quote, translate, convert video to text, or extract information from video content. Also use when a user shares a video URL without explanation and wants to know what it says. Not for uploads or account management."
+version: "1.5.0"
 user-invocable: true
 compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
 required_environment_variables:
@@ -9,7 +9,7 @@ required_environment_variables:
     prompt: Your TranscriptAPI key (starts with sk_)
     help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
     required_for: all API requests
-metadata: {"openclaw":{"emoji":"▶️","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY"},"hermes":{"tags":["youtube","transcripts","video","captions","text-extraction","summarization"],"category":"media"}}
+metadata: {"openclaw":{"emoji":"▶️","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY","homepage":"https://transcriptapi.com"},"hermes":{"tags":["youtube","transcripts","video","captions","text-extraction","summarization"],"category":"media"}}
 ---
 
 # Video Transcript

@@ -1,7 +1,7 @@
 ---
 name: youtube-channels
-description: Use when a YouTube channel is the focus: pasted @handles or channel URLs, requests to browse a creator's uploads, see what a channel has posted recently, search within a channel, or resolve a handle to a channel ID. Also use when the user names a creator and wants to explore their content or monitor their uploads. Not for creating channels or account management.
-homepage: https://transcriptapi.com
+description: "Use when a YouTube channel is the focus: pasted @handles or channel URLs, requests to browse a creator's uploads, see what a channel has posted recently, search within a channel, or resolve a handle to a channel ID. Also use when the user names a creator and wants to explore their content or monitor their uploads. Not for creating channels or account management."
+version: "1.5.0"
 user-invocable: true
 compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
 required_environment_variables:
@@ -9,7 +9,7 @@ required_environment_variables:
     prompt: Your TranscriptAPI key (starts with sk_)
     help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
     required_for: all API requests
-metadata: {"openclaw":{"emoji":"📡","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY"},"hermes":{"tags":["youtube","channels","video","uploads","creator","browsing"],"category":"media"}}
+metadata: {"openclaw":{"emoji":"📡","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY","homepage":"https://transcriptapi.com"},"hermes":{"tags":["youtube","channels","video","uploads","creator","browsing"],"category":"media"}}
 ---
 
 # YouTube Channels

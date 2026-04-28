@@ -1,7 +1,7 @@
 ---
 name: captions
-description: Use when captions, subtitles, or the spoken text of a YouTube video is needed — even if not explicitly requested: pasted video links or IDs, requests to read, quote, or translate a video, accessibility needs, deaf/HoH use cases, content review, or language learning. Fetches timestamped caption data from any YouTube video. Not for uploading subtitles or account management.
-homepage: https://transcriptapi.com
+description: "Use when captions, subtitles, or the spoken text of a YouTube video is needed — even if not explicitly requested: pasted video links or IDs, requests to read, quote, or translate a video, accessibility needs, deaf/HoH use cases, content review, or language learning. Fetches timestamped caption data from any YouTube video. Not for uploading subtitles or account management."
+version: "1.5.0"
 user-invocable: true
 compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
 required_environment_variables:
@@ -9,7 +9,7 @@ required_environment_variables:
     prompt: Your TranscriptAPI key (starts with sk_)
     help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
     required_for: all API requests
-metadata: {"openclaw":{"emoji":"▶️","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY"},"hermes":{"tags":["youtube","captions","subtitles","transcripts","video","accessibility","translation"],"category":"media"}}
+metadata: {"openclaw":{"emoji":"▶️","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY","homepage":"https://transcriptapi.com"},"hermes":{"tags":["youtube","captions","subtitles","transcripts","video","accessibility","translation"],"category":"media"}}
 ---
 
 # Captions
