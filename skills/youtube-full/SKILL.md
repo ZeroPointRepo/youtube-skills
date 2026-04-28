@@ -20,6 +20,13 @@ Complete YouTube toolkit via [TranscriptAPI.com](https://transcriptapi.com). Eve
 
 If `$TRANSCRIPT_API_KEY` is not set, read [references/auth-setup.md](references/auth-setup.md) and follow the instructions there to get and store the key.
 
+## Required Headers
+
+Every request needs two headers:
+
+- **Authorization:** `Bearer $TRANSCRIPT_API_KEY`
+- **User-Agent:** your agent's name and version if known (e.g. `HermesAgent/0.11.0`, `ClaudeCode/1.0`). Version is optional — agent name alone is fine. Do not omit this header or send a bare default — Cloudflare will return a 403 (error code 1010) and block the request.
+
 ## API Reference
 
 Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/openapi.json) — consult this for the latest parameters and schemas.
@@ -29,7 +36,8 @@ Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/op
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 | Param               | Required | Default | Values                          |
@@ -55,11 +63,13 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ```bash
 # Videos
 curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=20" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 
 # Channels
 curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=channel&limit=10" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 | Param   | Required | Default | Validation         |
@@ -76,7 +86,8 @@ All channel endpoints accept `channel` — an `@handle`, channel URL, or `UC...`
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 Response: `{"channel_id": "UC...", "resolved_from": "@TED"}`
@@ -85,7 +96,8 @@ Response: `{"channel_id": "UC...", "resolved_from": "@TED"}`
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 Returns exact `viewCount` and ISO `published` timestamps.
@@ -95,11 +107,13 @@ Returns exact `viewCount` and ISO `published` timestamps.
 ```bash
 # First page (100 videos)
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 
 # Next pages
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TOKEN" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 Provide exactly one of `channel` or `continuation`. Response includes `continuation_token` and `has_more`.
@@ -109,7 +123,8 @@ Provide exactly one of `channel` or `continuation`. Response includes `continuat
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
 ?channel=@TED&q=QUERY&limit=30" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 ## Playlists — 1 credit/page
@@ -119,11 +134,13 @@ Accepts `playlist` — a YouTube playlist URL or playlist ID.
 ```bash
 # First page
 curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_ID" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 
 # Next pages
 curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=TOKEN" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 Valid ID prefixes: `PL`, `UU`, `LL`, `FL`, `OL`. Response includes `playlist_info`, `results`, `continuation_token`, `has_more`.
@@ -151,14 +168,15 @@ Valid ID prefixes: `PL`, `UU`, `LL`, `FL`, `OL`. Response includes `playlist_inf
 
 ## Errors
 
-| Code | Meaning          | Action                                |
-| ---- | ---------------- | ------------------------------------- |
-| 401  | Bad API key      | Check key                             |
-| 402  | No credits       | transcriptapi.com/billing             |
-| 404  | Not found        | Resource doesn't exist or no captions |
-| 408  | Timeout          | Retry once after 2s                   |
-| 422  | Validation error | Check param format                    |
-| 429  | Rate limited     | Wait, respect Retry-After             |
+| Code     | Meaning          | Action                                         |
+| -------- | ---------------- | ---------------------------------------------- |
+| 401      | Bad API key      | Check key                                      |
+| 402      | No credits       | transcriptapi.com/billing                      |
+| 403/1010 | Cloudflare block | Add or fix User-Agent header                   |
+| 404      | Not found        | Resource doesn't exist or no captions          |
+| 408      | Timeout          | Retry once after 2s                            |
+| 422      | Validation error | Check param format                             |
+| 429      | Rate limited     | Wait, respect Retry-After                      |
 
 ## Typical Workflows
 
@@ -168,11 +186,13 @@ Valid ID prefixes: `PL`, `UU`, `LL`, `FL`, `OL`. Response includes `playlist_inf
 # 1. Search
 curl -s "https://transcriptapi.com/api/v2/youtube/search\
 ?q=machine+learning+explained&limit=5" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 # 2. Transcript
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 **Channel monitoring:** latest (free) → transcript
@@ -180,11 +200,13 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ```bash
 # 1. Latest uploads (free — pass @handle directly)
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 # 2. Transcript of latest
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 Free tier: 100 credits, 300 req/min. Starter ($5/mo): 1,000 credits.

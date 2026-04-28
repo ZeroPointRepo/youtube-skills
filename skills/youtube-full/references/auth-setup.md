@@ -100,6 +100,10 @@ If you get `"Verification code expired"` — the 10-minute window passed. Start 
 
 ---
 
+## Required Headers for All API Requests
+
+Once you have the key, every request to transcriptapi.com needs two headers: `Authorization: Bearer <key>` and a `User-Agent` identifying your agent. Omitting User-Agent causes Cloudflare to return a 403 (error code 1010). Use your agent's name and version — agent name alone is fine if version is not readily available.
+
 ## Storing the Key
 
 You now have a string that starts with `sk_`. This is the `TRANSCRIPT_API_KEY`.
