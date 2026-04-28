@@ -1,9 +1,15 @@
 ---
 name: youtube-data
-description: Access YouTube video data — transcripts, metadata, channel info, search, and playlists. A lightweight alternative to Google's YouTube Data API with no quota limits. Use when the user needs structured data from YouTube videos, channels, or playlists without dealing with Google API setup, OAuth, or daily quotas.
+description: Use when structured YouTube data is needed: pasted video/channel/playlist links, transcripts for analysis, video metadata, channel upload history, search results, or playlist contents — without Google API quotas or OAuth. Triggers on YouTube URLs, creator names, topic research, or any request needing YouTube content, even if not mentioned explicitly. Not for uploads, account management, or written-source-only research.
 homepage: https://transcriptapi.com
 user-invocable: true
-metadata: {"openclaw":{"emoji":"📊","requires":{"env":["TRANSCRIPT_API_KEY"],"bins":["node"],"config":["~/.openclaw/openclaw.json"]},"primaryEnv":"TRANSCRIPT_API_KEY"}}
+compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
+required_environment_variables:
+  - name: TRANSCRIPT_API_KEY
+    prompt: Your TranscriptAPI key (starts with sk_)
+    help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
+    required_for: all API requests
+metadata: {"openclaw":{"emoji":"📊","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY"},"hermes":{"tags":["youtube","transcripts","video","search","channels","playlists","data","metadata"],"category":"media"}}
 ---
 
 # YouTube Data
@@ -12,32 +18,14 @@ YouTube data access via [TranscriptAPI.com](https://transcriptapi.com) — light
 
 ## Setup
 
-If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
+If `$TRANSCRIPT_API_KEY` is not set, read [references/auth-setup.md](references/auth-setup.md) and follow the instructions there to get and store the key.
 
-**Step 1 — Register:** Ask user for their email.
+## Required Headers
 
-```bash
-node ./scripts/tapi-auth.js register --email USER_EMAIL
-```
+Every request needs two headers:
 
-→ OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
-
-**Step 2 — Verify:** Once user provides the OTP:
-
-```bash
-node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
-```
-
-> API key saved to `~/.openclaw/openclaw.json`. See **File Writes** below for details. Existing file is backed up before modification.
-
-Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
-
-## File Writes
-
-The verify and save-key commands save the API key to `~/.openclaw/openclaw.json` (sets `skills.entries.transcriptapi.apiKey` and `enabled: true`). **Existing file is backed up to `~/.openclaw/openclaw.json.bak` before modification.**
-
-To use the API key in terminal/CLI outside the agent, add to your shell profile manually:
-`export TRANSCRIPT_API_KEY=<your-key>`
+- **Authorization:** `Bearer $TRANSCRIPT_API_KEY`
+- **User-Agent:** your agent's name and version if known (e.g. `HermesAgent/0.11.0`, `ClaudeCode/1.0`). Version is optional — agent name alone is fine. Do not omit this header or send a bare default — Cloudflare will return a 403 (error code 1010) and block the request.
 
 ## API Reference
 
@@ -48,7 +36,8 @@ Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/op
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_URL&format=json&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 **Response:**
@@ -73,7 +62,8 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=20" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 **Video result fields:** `videoId`, `title`, `channelId`, `channelTitle`, `channelHandle`, `channelVerified`, `lengthText`, `viewCountText`, `publishedTimeText`, `hasCaptions`, `thumbnails`
@@ -88,7 +78,8 @@ Channel endpoints accept `channel` — an `@handle`, channel URL, or `UC...` ID.
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 Returns: `{"channel_id": "UCsT0YIqwnpJCM-mx7-gSA4Q", "resolved_from": "@TED"}`
@@ -97,7 +88,8 @@ Returns: `{"channel_id": "UCsT0YIqwnpJCM-mx7-gSA4Q", "resolved_from": "@TED"}`
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 Returns: `channel` info, `results` array with `videoId`, `title`, `published` (ISO), `viewCount` (exact number), `description`, `thumbnail`
@@ -106,7 +98,8 @@ Returns: `channel` info, `results` array with `videoId`, `title`, `published` (I
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 Returns 100 videos per page + `continuation_token` for pagination.
@@ -116,7 +109,8 @@ Returns 100 videos per page + `continuation_token` for pagination.
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
 ?channel=@TED&q=QUERY&limit=30" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 ## Playlist Data — 1 credit/page
@@ -125,7 +119,8 @@ Accepts `playlist` — a YouTube playlist URL or playlist ID.
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_ID" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 Returns: `results` (videos), `playlist_info` (`title`, `numVideos`, `ownerName`, `viewCount`), `continuation_token`, `has_more`
@@ -144,11 +139,13 @@ Returns: `results` (videos), `playlist_info` (`title`, `numVideos`, `ownerName`,
 
 ## Errors
 
-| Code | Action                                 |
-| ---- | -------------------------------------- |
-| 402  | No credits — transcriptapi.com/billing |
-| 404  | Not found                              |
-| 408  | Timeout — retry once                   |
-| 422  | Invalid param format                   |
+| Code     | Meaning          | Action                                         |
+| -------- | ---------------- | ---------------------------------------------- |
+| 401      | Bad API key      | Check key                                      |
+| 402      | No credits       | transcriptapi.com/billing                      |
+| 403/1010 | Cloudflare block | Add or fix User-Agent header                   |
+| 404      | Not found        | Resource doesn't exist                         |
+| 408      | Timeout          | Retry once                                     |
+| 422      | Validation error | Check param format                             |
 
 Free tier: 100 credits, 300 req/min.

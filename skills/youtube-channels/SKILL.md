@@ -1,8 +1,15 @@
 ---
 name: youtube-channels
-description: Work with YouTube channels — resolve handles to IDs, browse uploads, get latest videos, search within channels. Use when the user asks about a specific channel, wants to see recent uploads, or says "what has X posted lately", "latest from TED", "show me their channel", "list channel videos", "browse channel uploads".
+description: Use when a YouTube channel is the focus: pasted @handles or channel URLs, requests to browse a creator's uploads, see what a channel has posted recently, search within a channel, or resolve a handle to a channel ID. Also use when the user names a creator and wants to explore their content or monitor their uploads. Not for creating channels or account management.
 homepage: https://transcriptapi.com
 user-invocable: true
+compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
+required_environment_variables:
+  - name: TRANSCRIPT_API_KEY
+    prompt: Your TranscriptAPI key (starts with sk_)
+    help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
+    required_for: all API requests
+metadata: {"openclaw":{"emoji":"▶️","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY"},"hermes":{"tags":["youtube","channels","video","uploads","creator","browsing"],"category":"media"}}
 ---
 
 # YouTube Channels
@@ -11,25 +18,14 @@ YouTube channel tools via [TranscriptAPI.com](https://transcriptapi.com).
 
 ## Setup
 
-If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
+If `$TRANSCRIPT_API_KEY` is not set, read [references/auth-setup.md](references/auth-setup.md) and follow the instructions there to get and store the key.
 
-**Step 1 — Register:** Ask user for their email.
+## Required Headers
 
-```bash
-node ./scripts/tapi-auth.js register --email USER_EMAIL
-```
+Every request needs two headers:
 
-→ OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
-
-**Step 2 — Verify:** Once user provides the OTP:
-
-```bash
-node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
-```
-
-> API key saved to your shell profile and agent config. Ready to use.
-
-Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
+- **Authorization:** `Bearer $TRANSCRIPT_API_KEY`
+- **User-Agent:** your agent's name and version if known (e.g. `HermesAgent/0.11.0`, `ClaudeCode/1.0`). Version is optional — agent name alone is fine. Do not omit this header or send a bare default — Cloudflare will return a 403 (error code 1010) and block the request.
 
 ## API Reference
 
@@ -43,7 +39,8 @@ Convert @handle, URL, or UC... ID to canonical channel ID.
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 | Param   | Required | Validation                              |
@@ -64,7 +61,8 @@ Latest 15 videos via RSS with exact stats.
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 | Param     | Required | Validation                                |
@@ -115,11 +113,13 @@ Paginated list of ALL channel uploads (100 per page).
 ```bash
 # First page
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 
 # Next pages
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TOKEN" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 | Param          | Required    | Validation                                    |
@@ -159,7 +159,8 @@ Search within a specific channel.
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
 ?channel=@TED&q=climate+change&limit=30" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 | Param     | Required | Validation                                |
@@ -173,22 +174,25 @@ curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
 ```bash
 # 1. Check latest uploads (free — pass @handle directly)
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 
 # 2. Get transcript of recent video
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 ## Errors
 
-| Code | Action                                                         |
-| ---- | -------------------------------------------------------------- |
-| 400  | Invalid param combination (both or neither channel/continuation) |
-| 402  | No credits — transcriptapi.com/billing                         |
-| 404  | Channel not found                                              |
-| 408  | Timeout — retry once                                           |
-| 422  | Invalid channel identifier                                     |
+| Code     | Meaning                                                | Action                               |
+| -------- | ------------------------------------------------------ | ------------------------------------ |
+| 400      | Invalid param combination                              | Both or neither channel/continuation |
+| 402      | No credits                                             | transcriptapi.com/billing            |
+| 403/1010 | Cloudflare block                                       | Add or fix User-Agent header         |
+| 404      | Channel not found                                      | Check handle or URL                  |
+| 408      | Timeout                                                | Retry once                           |
+| 422      | Invalid channel identifier                             | Check param format                   |
 
 Free tier: 100 credits, 300 req/min. Free endpoints (resolve, latest) require auth but don't consume credits.

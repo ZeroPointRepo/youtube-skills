@@ -1,8 +1,15 @@
 ---
 name: youtube-api
-description: YouTube API access without the official API quota hassle — transcripts, search, channels, playlists, and metadata with no Google API key needed. Use when the user needs YouTube data programmatically, wants to avoid Google API quotas, or asks for "youtube api", "get video data", "youtube without api key", "no quota youtube".
+description: Use when YouTube data is needed without Google API quotas or OAuth setup: transcripts, video metadata, channel info, search results, playlists. Triggers on pasted YouTube links, creator names, @handles, topic research, video summaries, channel browsing, or any request where YouTube content would help — even if not mentioned explicitly. Not for uploads, account management, or written-source-only research.
 homepage: https://transcriptapi.com
 user-invocable: true
+compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
+required_environment_variables:
+  - name: TRANSCRIPT_API_KEY
+    prompt: Your TranscriptAPI key (starts with sk_)
+    help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
+    required_for: all API requests
+metadata: {"openclaw":{"emoji":"▶️","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY"},"hermes":{"tags":["youtube","transcripts","video","search","channels","playlists","api","no-quota"],"category":"media"}}
 ---
 
 # YouTube API
@@ -11,25 +18,14 @@ YouTube data access via [TranscriptAPI.com](https://transcriptapi.com) — no Go
 
 ## Setup
 
-If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
+If `$TRANSCRIPT_API_KEY` is not set, read [references/auth-setup.md](references/auth-setup.md) and follow the instructions there to get and store the key.
 
-**Step 1 — Register:** Ask user for their email.
+## Required Headers
 
-```bash
-node ./scripts/tapi-auth.js register --email USER_EMAIL
-```
+Every request needs two headers:
 
-→ OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
-
-**Step 2 — Verify:** Once user provides the OTP:
-
-```bash
-node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
-```
-
-> API key saved to your shell profile and agent config. Ready to use.
-
-Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
+- **Authorization:** `Bearer $TRANSCRIPT_API_KEY`
+- **User-Agent:** your agent's name and version if known (e.g. `HermesAgent/0.11.0`, `ClaudeCode/1.0`). Version is optional — agent name alone is fine. Do not omit this header or send a bare default — Cloudflare will return a 403 (error code 1010) and block the request.
 
 ## API Reference
 
@@ -58,7 +54,8 @@ Channel endpoints accept `channel` — an `@handle`, channel URL, or `UC...` ID.
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/search\
 ?q=python+tutorial&type=video&limit=10" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 **Get transcript:**
@@ -66,28 +63,32 @@ curl -s "https://transcriptapi.com/api/v2/youtube/search\
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=dQw4w9WgXcQ&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 **Resolve channel handle (free):**
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 **Latest videos (free):**
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 **Browse channel uploads (paginated):**
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 # Use continuation token from response for next pages
 ```
 
@@ -95,7 +96,8 @@ curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA" 
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 ## Parameter Validation
@@ -119,13 +121,14 @@ curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PL
 
 ## Errors
 
-| Code | Meaning           | Action                    |
-| ---- | ----------------- | ------------------------- |
-| 401  | Bad API key       | Check key                 |
-| 402  | No credits        | transcriptapi.com/billing |
-| 404  | Not found         | Resource doesn't exist    |
-| 408  | Timeout/retryable | Retry once after 2s       |
-| 422  | Validation error  | Check param format        |
-| 429  | Rate limited      | Wait, respect Retry-After |
+| Code     | Meaning           | Action                                         |
+| -------- | ----------------- | ---------------------------------------------- |
+| 401      | Bad API key       | Check key                                      |
+| 402      | No credits        | transcriptapi.com/billing                      |
+| 403/1010 | Cloudflare block  | Add or fix User-Agent header                   |
+| 404      | Not found         | Resource doesn't exist                         |
+| 408      | Timeout/retryable | Retry once after 2s                            |
+| 422      | Validation error  | Check param format                             |
+| 429      | Rate limited      | Wait, respect Retry-After                      |
 
 Free tier: 100 credits, 300 req/min. Starter ($5/mo): 1,000 credits.

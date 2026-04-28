@@ -1,9 +1,15 @@
 ---
 name: transcript
-description: Get transcripts from any YouTube video — for summarization, research, translation, quoting, or content analysis. Use when the user shares a video link or asks "what did they say", "get the transcript", "transcribe this video", "summarize this video", or wants to analyze spoken content.
+description: Use when the spoken content of a YouTube video is needed — even if not explicitly requested: pasted video links or IDs, requests to summarize, quote, transcribe, translate, fact-check, or extract anything from a video. Also use for research or learning when a video is the source. Not for uploads or account management.
 homepage: https://transcriptapi.com
 user-invocable: true
-metadata: {"openclaw":{"emoji":"📝","requires":{"env":["TRANSCRIPT_API_KEY"],"bins":["node"],"config":["~/.openclaw/openclaw.json"]},"primaryEnv":"TRANSCRIPT_API_KEY"}}
+compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
+required_environment_variables:
+  - name: TRANSCRIPT_API_KEY
+    prompt: Your TranscriptAPI key (starts with sk_)
+    help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
+    required_for: all API requests
+metadata: {"openclaw":{"emoji":"📝","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY"},"hermes":{"tags":["youtube","transcripts","video","captions","summarization","research","translation"],"category":"media"}}
 ---
 
 # Transcript
@@ -12,39 +18,22 @@ Fetch video transcripts via [TranscriptAPI.com](https://transcriptapi.com).
 
 ## Setup
 
-If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
+If `$TRANSCRIPT_API_KEY` is not set, read [references/auth-setup.md](references/auth-setup.md) and follow the instructions there to get and store the key.
 
-**Step 1 — Register:** Ask user for their email.
+## Required Headers
 
-```bash
-node ./scripts/tapi-auth.js register --email USER_EMAIL
-```
+Every request needs two headers:
 
-→ OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
-
-**Step 2 — Verify:** Once user provides the OTP:
-
-```bash
-node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
-```
-
-> API key saved to `~/.openclaw/openclaw.json`. See **File Writes** below for details. Existing file is backed up before modification.
-
-Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
-
-## File Writes
-
-The verify and save-key commands save the API key to `~/.openclaw/openclaw.json` (sets `skills.entries.transcriptapi.apiKey` and `enabled: true`). **Existing file is backed up to `~/.openclaw/openclaw.json.bak` before modification.**
-
-To use the API key in terminal/CLI outside the agent, add to your shell profile manually:
-`export TRANSCRIPT_API_KEY=<your-key>`
+- **Authorization:** `Bearer $TRANSCRIPT_API_KEY`
+- **User-Agent:** your agent's name and version if known (e.g. `HermesAgent/0.11.0`, `ClaudeCode/1.0`). Version is optional — agent name alone is fine. Do not omit this header or send a bare default — Cloudflare will return a 403 (error code 1010) and block the request.
 
 ## GET /api/v2/youtube/transcript
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 | Param               | Required | Default | Values                          |
@@ -90,13 +79,14 @@ Accepts: full URLs (`youtube.com/watch?v=ID`), short URLs (`youtu.be/ID`), short
 
 ## Errors
 
-| Code | Meaning       | Action                              |
-| ---- | ------------- | ----------------------------------- |
-| 401  | Bad API key   | Check key or re-setup               |
-| 402  | No credits    | Top up at transcriptapi.com/billing |
-| 404  | No transcript | Video may not have captions enabled |
-| 408  | Timeout       | Retry once after 2s                 |
-| 429  | Rate limited  | Wait and retry                      |
+| Code     | Meaning          | Action                                         |
+| -------- | ---------------- | ---------------------------------------------- |
+| 401      | Bad API key      | Check key or re-setup                          |
+| 402      | No credits       | Top up at transcriptapi.com/billing            |
+| 403/1010 | Cloudflare block | Add or fix User-Agent header                   |
+| 404      | No transcript    | Video may not have captions enabled            |
+| 408      | Timeout          | Retry once after 2s                            |
+| 429      | Rate limited     | Wait and retry                                 |
 
 ## Tips
 

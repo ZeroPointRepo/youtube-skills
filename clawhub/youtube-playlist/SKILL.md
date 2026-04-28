@@ -1,9 +1,15 @@
 ---
 name: youtube-playlist
-description: Browse YouTube playlists and fetch video transcripts. Use when the user shares a playlist link, asks "what's in this playlist", "list playlist videos", "browse playlist content", or wants to work with playlist videos and get their transcripts.
+description: Use when a YouTube playlist is involved: pasted playlist links or IDs, requests to list playlist videos, browse playlist contents, or work through a playlist for transcripts or research. Also use when the user wants all videos from a series, course, or collection. Not for creating playlists or account management.
 homepage: https://transcriptapi.com
 user-invocable: true
-metadata: {"openclaw":{"emoji":"📋","requires":{"env":["TRANSCRIPT_API_KEY"],"bins":["node"],"config":["~/.openclaw/openclaw.json"]},"primaryEnv":"TRANSCRIPT_API_KEY"}}
+compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
+required_environment_variables:
+  - name: TRANSCRIPT_API_KEY
+    prompt: Your TranscriptAPI key (starts with sk_)
+    help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
+    required_for: all API requests
+metadata: {"openclaw":{"emoji":"📋","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY"},"hermes":{"tags":["youtube","playlists","video","transcripts","series"],"category":"media"}}
 ---
 
 # YouTube Playlist
@@ -12,32 +18,14 @@ Browse playlists and fetch transcripts via [TranscriptAPI.com](https://transcrip
 
 ## Setup
 
-If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
+If `$TRANSCRIPT_API_KEY` is not set, read [references/auth-setup.md](references/auth-setup.md) and follow the instructions there to get and store the key.
 
-**Step 1 — Register:** Ask user for their email.
+## Required Headers
 
-```bash
-node ./scripts/tapi-auth.js register --email USER_EMAIL
-```
+Every request needs two headers:
 
-→ OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
-
-**Step 2 — Verify:** Once user provides the OTP:
-
-```bash
-node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
-```
-
-> API key saved to `~/.openclaw/openclaw.json`. See **File Writes** below for details. Existing file is backed up before modification.
-
-Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
-
-## File Writes
-
-The verify and save-key commands save the API key to `~/.openclaw/openclaw.json` (sets `skills.entries.transcriptapi.apiKey` and `enabled: true`). **Existing file is backed up to `~/.openclaw/openclaw.json.bak` before modification.**
-
-To use the API key in terminal/CLI outside the agent, add to your shell profile manually:
-`export TRANSCRIPT_API_KEY=<your-key>`
+- **Authorization:** `Bearer $TRANSCRIPT_API_KEY`
+- **User-Agent:** your agent's name and version if known (e.g. `HermesAgent/0.11.0`, `ClaudeCode/1.0`). Version is optional — agent name alone is fine. Do not omit this header or send a bare default — Cloudflare will return a 403 (error code 1010) and block the request.
 
 ## API Reference
 
@@ -50,11 +38,13 @@ Paginated playlist video listing (100 per page). Accepts `playlist` — a YouTub
 ```bash
 # First page
 curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 
 # Next pages
 curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=TOKEN" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 | Param          | Required    | Validation                                           |
@@ -112,12 +102,14 @@ Provide exactly one of `playlist` or `continuation`, not both.
 ```bash
 # 1. List playlist videos
 curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 
 # 2. Get transcript from a video in the playlist
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 ## Extract playlist ID from URL
@@ -126,12 +118,13 @@ From `https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf`,
 
 ## Errors
 
-| Code | Meaning                    | Action                                           |
-| ---- | -------------------------- | ------------------------------------------------ |
-| 400  | Both or neither params     | Provide exactly one of playlist or continuation  |
-| 402  | No credits                 | transcriptapi.com/billing                        |
-| 404  | Playlist not found         | Check if playlist is public                      |
-| 408  | Timeout                    | Retry once                                       |
-| 422  | Invalid playlist format    | Must be a valid playlist URL or ID               |
+| Code     | Meaning                 | Action                                           |
+| -------- | ----------------------- | ------------------------------------------------ |
+| 400      | Both or neither params  | Provide exactly one of playlist or continuation  |
+| 402      | No credits              | transcriptapi.com/billing                        |
+| 403/1010 | Cloudflare block        | Add or fix User-Agent header                     |
+| 404      | Playlist not found      | Check if playlist is public                      |
+| 408      | Timeout                 | Retry once                                       |
+| 422      | Invalid playlist format | Must be a valid playlist URL or ID               |
 
 1 credit per page. Free tier: 100 credits, 300 req/min.

@@ -1,9 +1,15 @@
 ---
 name: subtitles
-description: Get subtitles from YouTube videos for translation, language learning, or reading along. Use when the user asks for subtitles, subs, foreign language text, or wants to read video content. Supports multiple languages and timestamped output for sync'd reading.
+description: Use when subtitles or the spoken text of a YouTube video is needed: pasted video links or IDs, requests to translate a video, read along, follow foreign-language content, or extract what was said. Also use for language learning or accessibility. Fetches timestamped subtitles from any YouTube video. Not for uploading subtitles or account management.
 homepage: https://transcriptapi.com
 user-invocable: true
-metadata: {"openclaw":{"emoji":"🗨️","requires":{"env":["TRANSCRIPT_API_KEY"],"bins":["node"],"config":["~/.openclaw/openclaw.json"]},"primaryEnv":"TRANSCRIPT_API_KEY"}}
+compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
+required_environment_variables:
+  - name: TRANSCRIPT_API_KEY
+    prompt: Your TranscriptAPI key (starts with sk_)
+    help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
+    required_for: all API requests
+metadata: {"openclaw":{"emoji":"🗨️","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY"},"hermes":{"tags":["youtube","subtitles","captions","transcripts","video","translation","language-learning"],"category":"media"}}
 ---
 
 # Subtitles
@@ -12,39 +18,22 @@ Fetch YouTube video subtitles via [TranscriptAPI.com](https://transcriptapi.com)
 
 ## Setup
 
-If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
+If `$TRANSCRIPT_API_KEY` is not set, read [references/auth-setup.md](references/auth-setup.md) and follow the instructions there to get and store the key.
 
-**Step 1 — Register:** Ask user for their email.
+## Required Headers
 
-```bash
-node ./scripts/tapi-auth.js register --email USER_EMAIL
-```
+Every request needs two headers:
 
-→ OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
-
-**Step 2 — Verify:** Once user provides the OTP:
-
-```bash
-node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
-```
-
-> API key saved to `~/.openclaw/openclaw.json`. See **File Writes** below for details. Existing file is backed up before modification.
-
-Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
-
-## File Writes
-
-The verify and save-key commands save the API key to `~/.openclaw/openclaw.json` (sets `skills.entries.transcriptapi.apiKey` and `enabled: true`). **Existing file is backed up to `~/.openclaw/openclaw.json.bak` before modification.**
-
-To use the API key in terminal/CLI outside the agent, add to your shell profile manually:
-`export TRANSCRIPT_API_KEY=<your-key>`
+- **Authorization:** `Bearer $TRANSCRIPT_API_KEY`
+- **User-Agent:** your agent's name and version if known (e.g. `HermesAgent/0.11.0`, `ClaudeCode/1.0`). Version is optional — agent name alone is fine. Do not omit this header or send a bare default — Cloudflare will return a 403 (error code 1010) and block the request.
 
 ## GET /api/v2/youtube/transcript
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_URL&format=text&include_timestamp=false&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 | Param               | Values                  | Use case                                       |
@@ -59,7 +48,8 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_ID&format=text&include_timestamp=false" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 **For translation** — structured segments:
@@ -67,7 +57,8 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_ID&format=json&include_timestamp=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
 **Response** (`format=json`):
@@ -100,10 +91,12 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 
 ## Errors
 
-| Code | Action                                 |
-| ---- | -------------------------------------- |
-| 402  | No credits — transcriptapi.com/billing |
-| 404  | No subtitles available                 |
-| 408  | Timeout — retry once after 2s          |
+| Code     | Meaning          | Action                                         |
+| -------- | ---------------- | ---------------------------------------------- |
+| 401      | Bad API key      | Check key                                      |
+| 402      | No credits       | transcriptapi.com/billing                      |
+| 403/1010 | Cloudflare block | Add or fix User-Agent header                   |
+| 404      | No subtitles     | No subtitles available                         |
+| 408      | Timeout          | Retry once after 2s                            |
 
 1 credit per request. Free tier: 100 credits, 300 req/min.
