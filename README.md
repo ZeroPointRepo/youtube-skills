@@ -4,7 +4,7 @@
 
 YouTube Skills gives your AI agent instant access to **YouTube transcripts**, **video search**, **channel data**, and **playlist extraction**. No yt-dlp (YouTube blocks all major cloud IPs), no headless browsers, no binaries — just a fast API call that works everywhere. Powered by [TranscriptAPI](https://transcriptapi.com), the same backend behind [YouTubeToTranscript.com](https://youtubetotranscript.com).
 
-Works with 🦞 [OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full) (ClawdBot/Moltbot), Claude Code, Cursor, Windsurf, and any agent that supports the [Agent Skills](https://skills.sh) format.
+Works with 🦞 [OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full) (ClawdBot/Moltbot), <img src="assets/hermes.png" alt="" height="14"> [Hermes Agent](https://hermes-agent.nousresearch.com), Claude Code, Cursor, Antigravity, and any agent that supports the [Agent Skills](https://skills.sh) format.
 
 **Free tier · No credit card · 100 credits on signup**
 
@@ -21,7 +21,12 @@ Most users want **youtube-full** — it covers transcripts, search, channels, an
 npx clawhub@latest install youtube-full
 ```
 
-**Claude Code / Cursor / Windsurf / Cline / Codex:**
+**<img src="assets/hermes.png" alt="" height="14"> Hermes Agent:**
+```bash
+hermes skills install skills-sh/ZeroPointRepo/youtube-skills/skills/youtube-full
+```
+
+**Claude Code / Cursor / Antigravity / Cline / Codex:**
 ```bash
 npx skills add ZeroPointRepo/youtube-skills --skill youtube-full
 ```
@@ -37,7 +42,7 @@ git clone https://github.com/ZeroPointRepo/youtube-skills.git
 cp -r youtube-skills/skills/youtube-full ~/.claude/skills/
 ```
 
-> **Not a developer?** Just paste this prompt into 🦞 [OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full), Claude, ChatGPT, or any AI agent:
+> **Not a developer?** Just paste this prompt into 🦞 [OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full), <img src="assets/hermes.png" alt="" height="14"> [Hermes Agent](https://hermes-agent.nousresearch.com), Claude, ChatGPT, or any AI agent:
 >
 > ```
 > Install the youtube skills from this GitHub repo: https://github.com/ZeroPointRepo/youtube-skills
@@ -71,7 +76,7 @@ Just install and ask. No config, no code — talk to your agent in plain English
 
 When you install a skill and run your agent for the first time, **the agent will set up your free API key automatically**. Here's what happens:
 
-1. The agent runs the registration script and asks you for your **email address**
+1. The agent asks you for your **email address** and registers you with TranscriptAPI
 2. You'll receive an **OTP code** in your email — the agent will ask you to enter it
 3. Once verified, the agent **saves the API key** to your shell and agent config automatically
 
@@ -80,17 +85,13 @@ That's it. 100 free credits, no credit card required.
 <details>
 <summary><strong>Manual setup (if you prefer to do it yourself)</strong></summary>
 
-```bash
-# 1. Register (sends OTP to your email)
-node ./scripts/tapi-auth.js register --email you@example.com --password yourpassword
+1. Sign up at [transcriptapi.com](https://transcriptapi.com) — free, no credit card required
+2. Copy your API key from the dashboard (starts with `sk_`)
+3. Ask your agent to store it for you:
 
-# 2. Check email for OTP, then verify (returns your API key)
-node ./scripts/tapi-auth.js verify --email you@example.com --password yourpassword --otp 123456
+   > "My TranscriptAPI key is `sk_...` — store it so it persists across sessions."
 
-# 3. Key is saved automatically to your shell and agent config
-```
-
-Or sign up at [transcriptapi.com](https://transcriptapi.com) and set the key manually:
+Or set it yourself as an environment variable:
 
 ```bash
 export TRANSCRIPT_API_KEY="sk_your_key_here"
@@ -101,11 +102,12 @@ export TRANSCRIPT_API_KEY="sk_your_key_here"
 <details>
 <summary><strong>Where does the key get saved?</strong></summary>
 
-The auth script writes your API key to:
+Your agent stores the API key here (depends on the runtime):
 
 | Location | File |
 |----------|------|
 | **OpenClaw/Moltbot** | `~/.openclaw/openclaw.json` or `~/.clawdbot/moltbot.json` |
+| **Hermes Agent** | Hermes secret store (`TRANSCRIPT_API_KEY` declared via `required_environment_variables` in skill frontmatter) |
 | **macOS shell** | `~/.zshenv`, `~/.zprofile` |
 | **Linux shell** | `~/.profile`, `~/.bashrc`, `~/.zshenv` |
 | **Fish shell** | `~/.config/fish/config.fish` |
@@ -184,9 +186,10 @@ Works with any AI agent that supports the [Agent Skills](https://skills.sh) form
 | Agent | Install Command |
 |-------|----------------|
 | 🦞 **[OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full)** (ClawdBot/Moltbot) | `npx clawhub@latest install youtube-full` |
+| <img src="assets/hermes.png" alt="" height="14"> **[Hermes Agent](https://hermes-agent.nousresearch.com)** | `hermes skills install skills-sh/ZeroPointRepo/youtube-skills/skills/youtube-full` |
 | **Claude Code** | `npx skills add ZeroPointRepo/youtube-skills` |
 | **Cursor** | `npx skills add ZeroPointRepo/youtube-skills` |
-| **Windsurf** | `npx skills add ZeroPointRepo/youtube-skills` |
+| **Antigravity** | `npx skills add ZeroPointRepo/youtube-skills` |
 | **Cline** | `npx skills add ZeroPointRepo/youtube-skills` |
 | **Codex** | `npx skills add ZeroPointRepo/youtube-skills` |
 | **Others** | Goose, AMP, Kiro, Roo, OpenCode, Gemini, GitHub Copilot... |
@@ -251,7 +254,7 @@ Yes, but signup is free and instant — 100 credits, no credit card required. Yo
 
 ## Powered by TranscriptAPI
 
-[TranscriptAPI.com](https://transcriptapi.com) — 6M+ transcripts/month, 99.9% uptime.
+[TranscriptAPI.com](https://transcriptapi.com) — 15M+ transcripts/month, 99.9% uptime.
 
 Also available: [MCP Server](https://github.com/ZeroPointRepo/transcriptapi-mcp) for direct LLM integration with Claude and ChatGPT.
 
