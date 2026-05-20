@@ -8,7 +8,7 @@ Works with 🦞 [OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full) (Cla
 
 **Free tier · No credit card · 100 credits on signup**
 
-[TranscriptAPI.com](https://transcriptapi.com) · [MCP Server](https://github.com/ZeroPointRepo/transcriptapi-mcp) · [Docs](https://transcriptapi.com/docs/)
+[TranscriptAPI.com](https://transcriptapi.com) · [MCP Server](https://github.com/ZeroPointRepo/youtube-mcp) · [Docs](https://transcriptapi.com/docs/)
 
 ---
 
@@ -248,7 +248,7 @@ Yes, but signup is free and instant — 100 credits, no credit card required. Yo
 
 ### What is TranscriptAPI?
 
-[TranscriptAPI.com](https://transcriptapi.com) is a REST API and MCP server for YouTube data. It provides transcript extraction, video search, channel browsing, and playlist operations — built for developers and AI agents. Also available as an [MCP Server](https://github.com/ZeroPointRepo/transcriptapi-mcp) for direct LLM integration (Claude, ChatGPT).
+[TranscriptAPI.com](https://transcriptapi.com) is a REST API and MCP server for YouTube data. It provides transcript extraction, video search, channel browsing, and playlist operations — built for developers and AI agents. Also available as an [MCP Server](https://github.com/ZeroPointRepo/youtube-mcp) for direct LLM integration (Claude, ChatGPT).
 
 ---
 
@@ -256,7 +256,7 @@ Yes, but signup is free and instant — 100 credits, no credit card required. Yo
 
 [TranscriptAPI.com](https://transcriptapi.com) — 15M+ transcripts/month, 99.9% uptime.
 
-Also available: [MCP Server](https://github.com/ZeroPointRepo/transcriptapi-mcp) for direct LLM integration with Claude and ChatGPT.
+Also available: [MCP Server](https://github.com/ZeroPointRepo/youtube-mcp) for direct LLM integration with Claude and ChatGPT.
 
 Full API docs: [transcriptapi.com/docs](https://transcriptapi.com/docs)
 
