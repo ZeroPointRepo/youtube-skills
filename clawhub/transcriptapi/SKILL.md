@@ -10,6 +10,10 @@ required_environment_variables:
     help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
     required_for: all API requests
 metadata: {"openclaw":{"emoji":"📺","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY","homepage":"https://transcriptapi.com"},"hermes":{"tags":["youtube","transcripts","video","search","channels","playlists","captions"],"category":"media"}}
+license: MIT
+metadata:
+  hermes:
+    tags: [youtube,transcriptapi]
 ---
 
 # TranscriptAPI
