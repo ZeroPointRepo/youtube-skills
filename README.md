@@ -4,7 +4,7 @@
 
 YouTube Skills gives your AI agent instant access to **YouTube transcripts**, **video search**, **channel data**, and **playlist extraction**. No yt-dlp (YouTube blocks all major cloud IPs), no headless browsers, no binaries — just a fast API call that works everywhere. Powered by [TranscriptAPI](https://transcriptapi.com), the same backend behind [YouTubeToTranscript.com](https://youtubetotranscript.com).
 
-Works with 🦞 [OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full) (ClawdBot/Moltbot), <img src="assets/hermes.png" alt="" height="14"> [Hermes Agent](https://hermes-agent.nousresearch.com), Claude Code, Cursor, Antigravity, and any agent that supports the [Agent Skills](https://skills.sh) format.
+Works with 🦞 [OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full) (ClawdBot/Moltbot), <img src="assets/hermes.png" alt="" height="14"> [Hermes Agent](https://hermes-agent.nousresearch.com), Claude Code, Autohand Code, Cursor, Antigravity, and any agent that supports the [Agent Skills](https://skills.sh) format.
 
 **Free tier · No credit card · 100 credits on signup**
 
@@ -40,6 +40,17 @@ npx skills add ZeroPointRepo/youtube-skills
 ```bash
 git clone https://github.com/ZeroPointRepo/youtube-skills.git
 cp -r youtube-skills/skills/youtube-full ~/.claude/skills/
+```
+
+**Autohand Code manual install:**
+```bash
+# User-level skills
+mkdir -p ~/.autohand/skills
+cp -r youtube-skills/skills/youtube-full ~/.autohand/skills/
+
+# Project-level skills
+mkdir -p .autohand/skills
+cp -r youtube-skills/skills/youtube-full .autohand/skills/
 ```
 
 > **Not a developer?** Just paste this prompt into 🦞 [OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full), <img src="assets/hermes.png" alt="" height="14"> [Hermes Agent](https://hermes-agent.nousresearch.com), Claude, ChatGPT, or any AI agent:
@@ -188,6 +199,7 @@ Works with any AI agent that supports the [Agent Skills](https://skills.sh) form
 | 🦞 **[OpenClaw](https://www.clawhub.ai/therohitdas/youtube-full)** (ClawdBot/Moltbot) | `npx clawhub@latest install youtube-full` |
 | <img src="assets/hermes.png" alt="" height="14"> **[Hermes Agent](https://hermes-agent.nousresearch.com)** | `hermes skills install skills-sh/ZeroPointRepo/youtube-skills/skills/youtube-full` |
 | **Claude Code** | `npx skills add ZeroPointRepo/youtube-skills` |
+| **Autohand Code** | Copy skills to `~/.autohand/skills/` or `<project>/.autohand/skills/` |
 | **Cursor** | `npx skills add ZeroPointRepo/youtube-skills` |
 | **Antigravity** | `npx skills add ZeroPointRepo/youtube-skills` |
 | **Cline** | `npx skills add ZeroPointRepo/youtube-skills` |
