@@ -252,6 +252,28 @@ Yes, but signup is free and instant — 100 credits, no credit card required. Yo
 
 ---
 
+## Troubleshooting
+
+Quick fixes for the issues users actually hit. Error codes come from the API itself, so your agent will usually report them verbatim.
+
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| `401 Unauthorized` | API key missing, mistyped, or not loaded into the environment | Confirm `TRANSCRIPT_API_KEY` is set in the shell your agent runs in and that the key starts with `sk_` |
+| `402 Payment Required` | The account is out of credits | Check your balance at [transcriptapi.com/billing](https://transcriptapi.com/billing) |
+| `403` with Cloudflare code `1010` | Request sent without a User-Agent header | Send your agent's name as the User-Agent, for example `HermesAgent/0.11.0` |
+| `404 Not Found` | The video has no captions, is not public, or the ID is wrong | Verify the URL opens in a browser and the player shows captions there |
+| `408 Request Timeout` | Temporary upstream pressure on the video | Transient by nature: retry once after a couple of seconds |
+| `422 Validation Error` | A parameter is malformed, such as a bad channel or playlist reference | Channels accept `@handle`, a channel URL, or a `UC` ID; playlists accept `PL`, `UU`, `LL`, `FL`, and `OL` prefixes |
+| `429 Too Many Requests` | Rate limit reached | Wait and respect the `Retry-After` header |
+
+Three more cases worth knowing:
+
+- **The key is saved but the agent cannot see it.** Shell config files load per shell type: check the table under "Where does the key get saved?" in the Setup section and make sure the file matches the shell your agent actually runs in. Restarting the agent after saving the key resolves most cases.
+- **Live streams and premieres.** Transcripts become available after the stream ends and captions are processed, not while it is live.
+- **Transcript comes back in an unexpected language.** Many videos only carry captions in their original language. Request the transcript with a preferred language parameter, or ask your agent to translate the result.
+
+---
+
 ## Powered by TranscriptAPI
 
 [TranscriptAPI.com](https://transcriptapi.com) — 15M+ transcripts/month, 99.9% uptime.
@@ -259,6 +281,10 @@ Yes, but signup is free and instant — 100 credits, no credit card required. Yo
 Also available: [MCP Server](https://github.com/ZeroPointRepo/youtube-mcp) for direct LLM integration with Claude and ChatGPT.
 
 Full API docs: [transcriptapi.com/docs](https://transcriptapi.com/docs)
+
+## Disclosure
+
+TranscriptAPI is an independent product and is not affiliated with or endorsed by YouTube or Google.
 
 ## Contributing
 
