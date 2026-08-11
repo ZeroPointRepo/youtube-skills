@@ -35,10 +35,10 @@ Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/op
 
 Search YouTube globally for videos or channels.
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=20" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=20
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param   | Required | Default | Validation            |
@@ -95,11 +95,10 @@ curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limi
 
 Search videos within a specific channel. Accepts `channel` — an `@handle`, channel URL, or `UC...` ID.
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
-?channel=@TED&q=climate+change&limit=30" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/channel/search?channel=@TED&q=climate+change&limit=30
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param     | Required | Validation                                |
@@ -114,26 +113,24 @@ Returns up to ~30 results (YouTube limit). Same video response shape as global s
 
 Convert @handle to channel ID:
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 ## Workflow: Search → Transcript
 
-```bash
+```http
 # 1. Search for videos
-curl -s "https://transcriptapi.com/api/v2/youtube/search\
-?q=python+web+scraping&type=video&limit=5" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+GET https://transcriptapi.com/api/v2/youtube/search?q=python+web+scraping&type=video&limit=5
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 
 # 2. Get transcript from result
-curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
-?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+GET https://transcriptapi.com/api/v2/youtube/transcript?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 ## Errors
@@ -148,3 +145,7 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 | 422      | Invalid param    | Check param format                             |
 
 Free tier: 100 credits, 300 req/min.
+
+## Copy-paste examples
+
+Every request in this file as a ready-to-run one-liner: [references/curl-examples.md](references/curl-examples.md)

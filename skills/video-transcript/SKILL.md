@@ -29,11 +29,10 @@ Every request needs two headers:
 
 ## GET /api/v2/youtube/transcript
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
-?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/transcript?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param               | Required | Default | Values                                 |
@@ -97,3 +96,7 @@ Accepted URL formats:
 | 408      | Timeout          | Retry once after 2s                            |
 
 1 credit per successful request. Errors don't consume credits. Free tier: 100 credits, 300 req/min.
+
+## Copy-paste examples
+
+Every request in this file as a ready-to-run one-liner: [references/curl-examples.md](references/curl-examples.md)

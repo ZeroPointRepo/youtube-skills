@@ -41,11 +41,10 @@ Channel endpoints accept `channel` — an `@handle`, channel URL, or `UC...` ID.
 
 ### GET /api/v2/youtube/transcript — 1 credit
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
-?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/transcript?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param               | Required | Default | Validation                      |
@@ -72,10 +71,10 @@ Accepts: `https://youtube.com/watch?v=ID`, `https://youtu.be/ID`, `youtube.com/s
 
 ### GET /api/v2/youtube/search — 1 credit
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=20" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=20
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param   | Required | Default | Validation            |
@@ -129,10 +128,10 @@ curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limi
 
 ### GET /api/v2/youtube/channel/resolve — FREE (0 credits)
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param   | Required | Validation                              |
@@ -149,16 +148,16 @@ If input is already a valid `UC[a-zA-Z0-9_-]{22}` ID, returns immediately withou
 
 ### GET /api/v2/youtube/channel/videos — 1 credit/page
 
-```bash
+```http
 # First page (100 videos)
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+GET https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 
 # Next pages
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TOKEN" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+GET https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TOKEN
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param          | Required    | Validation                                    |
@@ -191,10 +190,10 @@ Provide exactly one of `channel` or `continuation`.
 
 ### GET /api/v2/youtube/channel/latest — FREE (0 credits)
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param     | Required | Validation                                |
@@ -229,11 +228,10 @@ Returns last 15 videos via RSS with exact view counts and ISO timestamps.
 
 ### GET /api/v2/youtube/channel/search — 1 credit
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
-?channel=@TED&q=climate+change&limit=30" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/channel/search?channel=@TED&q=climate+change&limit=30
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param     | Required | Validation                                |
@@ -244,16 +242,16 @@ curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
 
 ### GET /api/v2/youtube/playlist/videos — 1 credit/page
 
-```bash
+```http
 # First page
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+GET https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 
 # Next pages
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=TOKEN" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+GET https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=TOKEN
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param          | Required    | Validation                                           |
@@ -291,3 +289,7 @@ curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=T
 - Use `channel/latest` (free) to check for new uploads before fetching transcripts — pass @handle directly.
 - For research: search → pick videos → fetch transcripts.
 - Free tier: 100 credits, 300 req/min. Starter ($5/mo): 1,000 credits, 300 req/min.
+
+## Copy-paste examples
+
+Every request in this file as a ready-to-run one-liner: [references/curl-examples.md](references/curl-examples.md)

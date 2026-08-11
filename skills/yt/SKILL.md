@@ -33,19 +33,18 @@ Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/op
 
 ## Transcript — 1 credit
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
-?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/transcript?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 ## Search — 1 credit
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=10" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=10
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param   | Default | Values                 |
@@ -56,20 +55,20 @@ curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limi
 
 ## Channel latest — FREE
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 Returns last 15 videos with exact view counts and publish dates. Accepts `@handle`, channel URL, or `UC...` ID.
 
 ## Resolve handle — FREE
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+```http
+GET https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 Use to convert @handle to UC... channel ID.
@@ -85,3 +84,7 @@ Use to convert @handle to UC... channel ID.
 | 408      | Timeout          | Retry once                                     |
 
 Free tier: 100 credits. Search and transcript cost 1 credit. Channel latest and resolve are free.
+
+## Copy-paste examples
+
+Every request in this file as a ready-to-run one-liner: [references/curl-examples.md](references/curl-examples.md)

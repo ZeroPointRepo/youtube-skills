@@ -35,16 +35,16 @@ Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/op
 
 Paginated playlist video listing (100 per page). Accepts `playlist` — a YouTube playlist URL or playlist ID.
 
-```bash
+```http
 # First page
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+GET https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 
 # Next pages
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=TOKEN" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+GET https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=TOKEN
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 | Param          | Required    | Validation                                           |
@@ -99,17 +99,16 @@ Provide exactly one of `playlist` or `continuation`, not both.
 
 ## Workflow: Playlist → Transcripts
 
-```bash
+```http
 # 1. List playlist videos
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+GET https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PLAYLIST_ID
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 
 # 2. Get transcript from a video in the playlist
-curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
-?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+GET https://transcriptapi.com/api/v2/youtube/transcript?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
 ```
 
 ## Extract playlist ID from URL
@@ -128,3 +127,7 @@ From `https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf`,
 | 422      | Invalid playlist format | Must be a valid playlist URL or ID               |
 
 1 credit per page. Free tier: 100 credits, 300 req/min.
+
+## Copy-paste examples
+
+Every request in this file as a ready-to-run one-liner: [references/curl-examples.md](references/curl-examples.md)
