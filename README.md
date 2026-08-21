@@ -282,6 +282,8 @@ Also available: [MCP Server](https://github.com/ZeroPointRepo/youtube-mcp) for d
 
 Full API docs: [transcriptapi.com/docs](https://transcriptapi.com/docs)
 
+Listed in [awesome-hermes-skills](https://github.com/ZeroPointRepo/awesome-hermes-skills), our directory of Hermes Agent skills, plugins, agent profiles and memory providers.
+
 ## Disclosure
 
 TranscriptAPI is an independent product and is not affiliated with or endorsed by YouTube or Google.
