@@ -1,5 +1,7 @@
 # YouTube Skills for AI Agents 🎬
 
+[![skills.sh](https://skills.sh/b/ZeroPointRepo/youtube-skills)](https://skills.sh/ZeroPointRepo/youtube-skills)
+
 > Get YouTube transcripts, search videos, browse channels, and extract playlists — from any AI agent.
 
 YouTube Skills gives your AI agent instant access to **YouTube transcripts**, **video search**, **channel data**, and **playlist extraction**. No yt-dlp (YouTube blocks all major cloud IPs), no headless browsers, no binaries — just a fast API call that works everywhere. Powered by [TranscriptAPI](https://transcriptapi.com), the same backend behind [YouTubeToTranscript.com](https://youtubetotranscript.com).
