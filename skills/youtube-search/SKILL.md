@@ -78,10 +78,10 @@ User-Agent: YourAgent/1.0
     {
       "type": "video",
       "videoId": "dQw4w9WgXcQ",
-      "title": "Rick Astley - Never Gonna Give You Up",
-      "channelId": "UCuAXFkgsw1L7xaCfnd5JJOw",
-      "channelTitle": "Rick Astley",
-      "channelHandle": "@RickAstley",
+      "title": "The Future of Design | TED Talk",
+      "channelId": "UCAuUUnT6oDeKwE6v1NGQxug",
+      "channelTitle": "TED",
+      "channelHandle": "@TED",
       "channelVerified": true,
       "lengthText": "3:33",
       "viewCountText": "1.5B views",
@@ -100,12 +100,12 @@ User-Agent: YourAgent/1.0
 {
   "results": [{
     "type": "channel",
-    "channelId": "UCuAXFkgsw1L7xaCfnd5JJOw",
-    "title": "Rick Astley",
-    "handle": "@RickAstley",
-    "url": "https://www.youtube.com/@RickAstley",
-    "description": "Official channel...",
-    "subscriberCount": "4.2M subscribers",
+    "channelId": "UCAuUUnT6oDeKwE6v1NGQxug",
+    "title": "TED",
+    "handle": "@TED",
+    "url": "https://www.youtube.com/@TED",
+    "description": "Ideas worth spreading...",
+    "subscriberCount": "23.8M subscribers",
     "verified": true,
     "rssUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC...",
     "thumbnails": [...]

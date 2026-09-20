@@ -57,9 +57,9 @@ Accepts: full URLs (`youtube.com/watch?v=ID`), short URLs (`youtu.be/ID`), short
     { "text": "You know the rules and so do I", "start": 21.5, "duration": 2.8 }
   ],
   "metadata": {
-    "title": "Rick Astley - Never Gonna Give You Up",
-    "author_name": "Rick Astley",
-    "author_url": "https://www.youtube.com/@RickAstley",
+    "title": "The Future of Design | TED Talk",
+    "author_name": "TED",
+    "author_url": "https://www.youtube.com/@TED",
     "thumbnail_url": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
   }
 }

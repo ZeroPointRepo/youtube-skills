@@ -50,9 +50,9 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
     { "text": "We're no strangers to love", "start": 18.0, "duration": 3.5 }
   ],
   "metadata": {
-    "title": "Rick Astley - Never Gonna Give You Up",
-    "author_name": "Rick Astley",
-    "author_url": "https://www.youtube.com/@RickAstley",
+    "title": "The Future of Design | TED Talk",
+    "author_name": "TED",
+    "author_url": "https://www.youtube.com/@TED",
     "thumbnail_url": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
   }
 }
