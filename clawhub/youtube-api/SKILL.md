@@ -1,7 +1,7 @@
 ---
 name: youtube-api
 description: "Use when YouTube data is needed without Google API quotas or OAuth setup: transcripts, video metadata, channel info, search results, playlists. Triggers on pasted YouTube links, creator names, @handles, topic research, video summaries, channel browsing, or any request where YouTube content would help — even if not mentioned explicitly. Not for uploads, account management, or written-source-only research."
-version: "1.5.0"
+version: "1.6.0"
 user-invocable: true
 compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
 required_environment_variables:
@@ -37,15 +37,25 @@ All endpoints: `https://transcriptapi.com/api/v2/youtube/...`
 
 Channel endpoints accept `channel` — an `@handle`, channel URL, or `UC...` ID. Playlist endpoints accept `playlist` — a playlist URL or ID.
 
-| Endpoint                            | Method | Cost     |
-| ----------------------------------- | ------ | -------- |
-| `/transcript?video_url=ID`          | GET    | 1        |
-| `/search?q=QUERY&type=video`        | GET    | 1        |
-| `/channel/resolve?input=@handle`    | GET    | **free** |
-| `/channel/latest?channel=@handle`   | GET    | **free** |
-| `/channel/videos?channel=@handle`   | GET    | 1/page   |
-| `/channel/search?channel=@handle&q=Q` | GET  | 1        |
-| `/playlist/videos?playlist=PL_ID`   | GET    | 1/page   |
+| Endpoint                              | Method | Cost     |
+| -------------------------------------- | ------ | -------- |
+| `/info?video_url=ID`                   | GET    | **free** |
+| `/video/metadata?video_url=ID`         | GET    | 1        |
+| `/transcript?video_url=ID`             | GET    | 1        |
+| `/search?q=QUERY&type=video`           | GET    | 1        |
+| `/channel/resolve?input=@handle`       | GET    | **free** |
+| `/channel/info?channel=@handle`        | GET    | 1        |
+| `/channel/latest?channel=@handle`      | GET    | **free** |
+| `/channel/videos?channel=@handle`      | GET    | 1/page   |
+| `/channel/search?channel=@handle&q=Q`  | GET    | 1        |
+| `/channel/playlists?channel=@handle`   | GET    | 1/page   |
+| `/channel/posts?channel=@handle`       | GET    | 1/page   |
+| `/channel/sections?channel=@handle`    | GET    | 1        |
+| `/playlist/videos?playlist=PL_ID`      | GET    | 1/page   |
+
+`search` also takes `type=playlist` or `type=movie`, plus first-page-only filters `sort` (`relevance`/`views`), `upload_date`, `duration`, and `features`. `channel/videos` takes `tab=videos` (default), `shorts`, or `streams`.
+
+> **Naming:** `/video/metadata` was previously `/video/info`. The old path still works but is deprecated — use `/video/metadata`.
 
 ## Quick Examples
 
@@ -66,6 +76,32 @@ curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
   -H "User-Agent: YourAgent/1.0"
 ```
+
+**Check video info & transcript languages (free, before spending a credit):**
+
+```bash
+curl -s "https://transcriptapi.com/api/v2/youtube/info?video_url=dQw4w9WgXcQ" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
+```
+
+**Get rich video metadata (views, likes, description, tags):**
+
+```bash
+curl -s "https://transcriptapi.com/api/v2/youtube/video/metadata?video_url=dQw4w9WgXcQ&include=details" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
+```
+
+**Get a channel's profile (subscriber count, tags, tabs):**
+
+```bash
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/info?channel=@TED" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
+```
+
+Also available with the same `channel` parameter: `/channel/playlists` (a channel's playlists), `/channel/posts` (community tab), and `/channel/sections` (its curated Home-page shelves).
 
 **Resolve channel handle (free):**
 
@@ -102,11 +138,13 @@ curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_PL
 
 ## Parameter Validation
 
-| Field          | Rule                                                    |
-| -------------- | ------------------------------------------------------- |
 | `channel`      | `@handle`, channel URL, or `UC...` ID                   |
 | `playlist`     | Playlist URL or ID (`PL`/`UU`/`LL`/`FL`/`OL` prefix)   |
 | `q` (search)   | 1-200 chars                                             |
+| `type` (search) | `video` (default), `channel`, `playlist`, `movie`      |
+| `tab` (channel/videos) | `videos` (default), `shorts`, `streams`         |
+| `tab` (channel/sections) | `featured` (default), `podcasts`, `releases`  |
+| `include` (video/metadata) | `details`, `related` (comma-separated)       |
 | `limit`        | 1-50                                                    |
 | `continuation` | non-empty string                                        |
 
