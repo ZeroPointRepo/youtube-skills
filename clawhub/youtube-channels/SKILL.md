@@ -1,7 +1,7 @@
 ---
 name: youtube-channels
 description: "Use when a YouTube channel is the focus: pasted @handles or channel URLs, requests to browse a creator's uploads, see what a channel has posted recently, search within a channel, or resolve a handle to a channel ID. Also use when the user names a creator and wants to explore their content or monitor their uploads. Not for creating channels or account management."
-version: "1.6.2"
+version: "1.6.3"
 user-invocable: true
 compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
 required_environment_variables:
@@ -136,21 +136,9 @@ curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TO
 
 Provide exactly one of `channel` or `continuation`, not both. When paginating, pass the same `tab` **and** `sort` on every page.
 
-**Sorting: `sort=latest|popular|oldest` (optional).**
+**Sorting.** Add sort=latest, popular, or oldest to channel/videos to get a channel's videos in the order you want, for example its most-popular uploads first. A sorted page returns about 30 videos (an unsorted page returns about 100), and every page costs the same 1 credit.
 
-Existing calls are untouched: omitting sort returns the uploads feed exactly as before. sort=latest is a different view (YouTube's Videos tab, Shorts excluded), not a re-ordering of it.
-
-| | `tab=videos`, no `sort` | `tab=videos` + any `sort` |
-| --- | --- | --- |
-| Source | uploads playlist | channel Videos tab |
-| Page size | ~100 | ~30 |
-| `playlist_info` | populated | `null` |
-| Shorts | mixed in | excluded (use `tab=shorts`) |
-| Members-only videos | excluded | included, flagged `members_only: true` |
-
-They are different *sets*, not one list in two orders. A sorted page holds ~30 items instead of ~100, so paging a whole catalogue with `sort` set costs roughly **3.3x the pages and 3.3x the credits**. Omit `sort` when you just want newest-first.
-
-`tab=shorts` and `tab=streams` read the same feed either way, so there `sort` only reorders. Repeat the same `tab` **and** `sort` on every page when paginating.
+When paging, send the same sort on each request.
 
 **Per-item fields by feed:**
 

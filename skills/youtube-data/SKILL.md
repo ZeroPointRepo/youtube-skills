@@ -1,7 +1,7 @@
 ---
 name: youtube-data
 description: "Use when structured YouTube data is needed: pasted video/channel/playlist links, transcripts for analysis, video metadata, channel upload history, search results, or playlist contents — without Google API quotas or OAuth. Triggers on YouTube URLs, creator names, topic research, or any request needing YouTube content, even if not mentioned explicitly. Not for uploads, account management, or written-source-only research."
-version: "1.6.1"
+version: "1.6.2"
 user-invocable: true
 compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
 required_environment_variables:
@@ -130,7 +130,9 @@ User-Agent: YourAgent/1.0
 
 Returns ~100 videos per page + `continuation_token` for pagination. `tab` also accepts `shorts` or `streams`, and you repeat the same `tab` when paginating.
 
-**Sorting.** `channel/videos` takes an optional `sort=latest|popular|oldest`. Existing calls are untouched: omitting sort returns the uploads feed exactly as before. sort=latest is a different view (YouTube's Videos tab, Shorts excluded), not a re-ordering of it. Omitted reads the uploads playlist (~100/page, `playlist_info` populated, Shorts mixed in, members-only videos excluded); any `sort` value reads the channel Videos tab (~30/page, `playlist_info: null`, long-form only, members-only videos included and flagged `members_only: true`). They are different *sets*, not one list in two orders. A sorted page holds ~30 items instead of ~100, so paging a whole catalogue with `sort` set costs roughly **3.3x the pages and 3.3x the credits**. Omit `sort` when you just want newest-first. `tab=shorts` / `tab=streams` read the same feed either way; there `sort` only reorders. Repeat the same `tab` **and** `sort` on every page.
+**Sorting.** Add sort=latest, popular, or oldest to channel/videos to get a channel's videos in the order you want, for example its most-popular uploads first. A sorted page returns about 30 videos (an unsorted page returns about 100), and every page costs the same 1 credit.
+
+When paging, send the same sort on each request.
 
 **Item fields.** Every item carries `members_only`, `true` only when YouTube badges it "Members only", and those items have no `viewCountText`. `tab=streams` items carry `lengthText` and `publishedTimeText` (for example `Streamed 2 years ago`); `tab=shorts` returns `null` for both, because YouTube's Shorts grid publishes neither. On the channel-tab feeds (`tab=videos` with `sort`, `tab=shorts`, `tab=streams`) `channelId`, `channelTitle`, `channelHandle` and `index` are `null`.
 
