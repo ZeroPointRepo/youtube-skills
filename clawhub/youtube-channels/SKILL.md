@@ -1,7 +1,7 @@
 ---
 name: youtube-channels
 description: "Use when a YouTube channel is the focus: pasted @handles or channel URLs, requests to browse a creator's uploads, see what a channel has posted recently, search within a channel, or resolve a handle to a channel ID. Also use when the user names a creator and wants to explore their content or monitor their uploads. Not for creating channels or account management."
-version: "1.6.0"
+version: "1.6.1"
 user-invocable: true
 compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
 required_environment_variables:
@@ -108,7 +108,7 @@ Great for monitoring channels — free and gives exact view counts + ISO timesta
 
 ## GET /api/v2/youtube/channel/videos — 1 credit/page
 
-Paginated list of a channel's feed (100 per page). Use `tab` to pick uploads (default), Shorts, or live streams.
+Paginated list of a channel's feed (~100 per page). Use `tab` to pick uploads (default), Shorts, or live streams, and the optional `sort` to order the Videos tab by latest, popular, or oldest.
 
 ```bash
 # First page
@@ -116,8 +116,13 @@ curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA&t
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
   -H "User-Agent: YourAgent/1.0"
 
-# Next pages (repeat the same tab)
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TOKEN" \
+# Most-viewed first (channel Videos tab, ~30 per page)
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA&sort=popular" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
+
+# Next pages (repeat the same tab AND sort)
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TOKEN&sort=popular" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
   -H "User-Agent: YourAgent/1.0"
 ```
@@ -126,9 +131,38 @@ curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TO
 | -------------- | ----------- | --------------------------------------------- |
 | `channel`      | conditional | `@handle`, channel URL, or `UC...` ID         |
 | `tab`          | no          | `videos` (default), `shorts`, or `streams`     |
+| `sort`         | no          | `latest`, `popular`, or `oldest` (omit for the uploads feed) |
 | `continuation` | conditional | non-empty (next pages)                        |
 
-Provide exactly one of `channel` or `continuation`, not both. When paginating a `shorts` or `streams` feed, pass the same `tab` on every page.
+Provide exactly one of `channel` or `continuation`, not both. When paginating, pass the same `tab` **and** `sort` on every page.
+
+**Sorting: `sort=latest|popular|oldest` (optional).**
+
+Existing calls are untouched: omitting sort returns the uploads feed exactly as before. sort=latest is a different view (YouTube's Videos tab, Shorts excluded), not a re-ordering of it.
+
+| | `tab=videos`, no `sort` | `tab=videos` + any `sort` |
+| --- | --- | --- |
+| Source | uploads playlist | channel Videos tab |
+| Page size | ~100 | ~30 |
+| `playlist_info` | populated | `null` |
+| Shorts | mixed in | excluded (use `tab=shorts`) |
+| Members-only videos | excluded | included, flagged `members_only: true` |
+
+They are different *sets*, not one list in two orders. A sorted page holds ~30 items instead of ~100, so paging a whole catalogue with `sort` set costs roughly **3.3x the pages and 3.3x the credits**. Omit `sort` when you just want newest-first.
+
+`tab=shorts` and `tab=streams` read the same feed either way, so there `sort` only reorders. Repeat the same `tab` **and** `sort` on every page when paginating.
+
+**Per-item fields by feed:**
+
+| Field | uploads (no `sort`) | `tab=videos` + `sort` | `tab=streams` | `tab=shorts` |
+| --- | --- | --- | --- | --- |
+| `lengthText` | populated | populated | populated (`LIVE` while live) | `null` |
+| `publishedTimeText` | populated | populated | populated (`Streamed 2 years ago`) | `null` |
+| `viewCountText` | populated | populated | populated (`null` while live) | populated |
+| `channelId` / `channelTitle` / `channelHandle` / `index` | populated | `null` | `null` | `null` |
+| `members_only` | always `false` | `true` on membership videos | `true` on membership streams | always `false` |
+
+`members_only` is `true` only when YouTube badges the item "Members only". Such items carry **no `viewCountText`**, because YouTube does not publish view counts for membership content.
 
 **Response:**
 
@@ -142,8 +176,10 @@ Provide exactly one of `channel` or `continuation`, not both. When paginating a 
     "channelHandle": "@TED",
     "lengthText": "15:22",
     "viewCountText": "3.2M views",
+    "publishedTimeText": "2 years ago",
     "thumbnails": [...],
-    "index": "0"
+    "index": "0",
+    "members_only": false
   }],
   "playlist_info": {"title": "Uploads from TED", "numVideos": "5000", "ownerName": "TED"},
   "continuation_token": "4qmFsgKlARIYVVV1...",

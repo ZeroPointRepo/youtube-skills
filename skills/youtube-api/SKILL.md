@@ -1,7 +1,7 @@
 ---
 name: youtube-api
 description: "Use when YouTube data is needed without Google API quotas or OAuth setup: transcripts, video metadata, channel info, search results, playlists. Triggers on pasted YouTube links, creator names, @handles, topic research, video summaries, channel browsing, or any request where YouTube content would help — even if not mentioned explicitly. Not for uploads, account management, or written-source-only research."
-version: "1.6.0"
+version: "1.6.1"
 user-invocable: true
 compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
 required_environment_variables:
@@ -53,7 +53,7 @@ Channel endpoints accept `channel` — an `@handle`, channel URL, or `UC...` ID.
 | `/channel/sections?channel=@handle`    | GET    | 1        |
 | `/playlist/videos?playlist=PL_ID`      | GET    | 1/page   |
 
-`search` also takes `type=playlist` or `type=movie`, plus first-page-only filters `sort` (`relevance`/`views`), `upload_date`, `duration`, and `features`. `channel/videos` takes `tab=videos` (default), `shorts`, or `streams`.
+`search` also takes `type=playlist` or `type=movie`, plus first-page-only filters `sort` (`relevance`/`views`), `upload_date`, `duration`, and `features`. `channel/videos` takes `tab=videos` (default), `shorts`, or `streams`, plus an optional `sort` (`latest`/`popular`/`oldest`).
 
 > **Naming:** `/video/metadata` was previously `/video/info`. The old path still works but is deprecated — use `/video/metadata`.
 
@@ -124,8 +124,17 @@ GET https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA
 Authorization: Bearer $TRANSCRIPT_API_KEY
 User-Agent: YourAgent/1.0
 
-# Use continuation token from response for next pages
+# Most-viewed first (channel Videos tab, ~30 per page)
+GET https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA&sort=popular
+Authorization: Bearer $TRANSCRIPT_API_KEY
+User-Agent: YourAgent/1.0
+
+# Use continuation token from response for next pages, repeating the same tab and sort
 ```
+
+**Sorting.** `channel/videos` takes an optional `sort=latest|popular|oldest`. Existing calls are untouched: omitting sort returns the uploads feed exactly as before. sort=latest is a different view (YouTube's Videos tab, Shorts excluded), not a re-ordering of it. Omitted reads the uploads playlist (~100/page, `playlist_info` populated, Shorts mixed in, members-only videos excluded); any `sort` value reads the channel Videos tab (~30/page, `playlist_info: null`, long-form only, members-only videos included and flagged `members_only: true`). They are different *sets*, not one list in two orders. A sorted page holds ~30 items instead of ~100, so paging a whole catalogue with `sort` set costs roughly **3.3x the pages and 3.3x the credits**. Omit `sort` when you just want newest-first. `tab=shorts` / `tab=streams` read the same feed either way; there `sort` only reorders. Repeat the same `tab` **and** `sort` on every page.
+
+**Item fields.** Every item carries `members_only`, `true` only when YouTube badges it "Members only", and those items have no `viewCountText`. `tab=streams` items carry `lengthText` and `publishedTimeText` (for example `Streamed 2 years ago`); `tab=shorts` returns `null` for both, because YouTube's Shorts grid publishes neither. On the channel-tab feeds (`tab=videos` with `sort`, `tab=shorts`, `tab=streams`) `channelId`, `channelTitle`, `channelHandle` and `index` are `null`.
 
 **Browse playlist (paginated):**
 
@@ -144,6 +153,7 @@ User-Agent: YourAgent/1.0
 | `q` (search)   | 1-200 chars                                             |
 | `type` (search) | `video` (default), `channel`, `playlist`, `movie`      |
 | `tab` (channel/videos) | `videos` (default), `shorts`, `streams`         |
+| `sort` (channel/videos) | `latest`, `popular`, `oldest` (omit for the uploads feed) |
 | `tab` (channel/sections) | `featured` (default), `podcasts`, `releases`  |
 | `include` (video/metadata) | `details`, `related` (comma-separated)       |
 | `limit`        | 1-50                                                    |
