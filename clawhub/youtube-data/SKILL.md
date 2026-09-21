@@ -1,7 +1,7 @@
 ---
 name: youtube-data
 description: "Use when structured YouTube data is needed: pasted video/channel/playlist links, transcripts for analysis, video metadata, channel upload history, search results, or playlist contents — without Google API quotas or OAuth. Triggers on YouTube URLs, creator names, topic research, or any request needing YouTube content, even if not mentioned explicitly. Not for uploads, account management, or written-source-only research."
-version: "1.6.0"
+version: "1.6.1"
 user-invocable: true
 compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
 required_environment_variables:
@@ -123,9 +123,18 @@ Returns: `channel` info, `results` array with `videoId`, `title`, `published` (I
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA&tab=videos" \
   -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
   -H "User-Agent: YourAgent/1.0"
+
+# Most-viewed first (channel Videos tab, ~30 per page)
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA&sort=popular" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
+  -H "User-Agent: YourAgent/1.0"
 ```
 
-Returns 100 videos per page + `continuation_token` for pagination. `tab` also accepts `shorts` or `streams` — repeat the same `tab` when paginating.
+Returns ~100 videos per page + `continuation_token` for pagination. `tab` also accepts `shorts` or `streams`, and you repeat the same `tab` when paginating.
+
+**Sorting.** `channel/videos` takes an optional `sort=latest|popular|oldest`. Existing calls are untouched: omitting sort returns the uploads feed exactly as before. sort=latest is a different view (YouTube's Videos tab, Shorts excluded), not a re-ordering of it. Omitted reads the uploads playlist (~100/page, `playlist_info` populated, Shorts mixed in, members-only videos excluded); any `sort` value reads the channel Videos tab (~30/page, `playlist_info: null`, long-form only, members-only videos included and flagged `members_only: true`). They are different *sets*, not one list in two orders. A sorted page holds ~30 items instead of ~100, so paging a whole catalogue with `sort` set costs roughly **3.3x the pages and 3.3x the credits**. Omit `sort` when you just want newest-first. `tab=shorts` / `tab=streams` read the same feed either way; there `sort` only reorders. Repeat the same `tab` **and** `sort` on every page.
+
+**Item fields.** Every item carries `members_only`, `true` only when YouTube badges it "Members only", and those items have no `viewCountText`. `tab=streams` items carry `lengthText` and `publishedTimeText` (for example `Streamed 2 years ago`); `tab=shorts` returns `null` for both, because YouTube's Shorts grid publishes neither. On the channel-tab feeds (`tab=videos` with `sort`, `tab=shorts`, `tab=streams`) `channelId`, `channelTitle`, `channelHandle` and `index` are `null`.
 
 **Search within channel (1 credit):**
 
@@ -199,7 +208,7 @@ Returns: `results` (videos), `playlist_info` (`title`, `numVideos`, `ownerName`,
 | channel/resolve   | **free** | Channel ID mapping              |
 | channel/info      | 1        | Channel profile                 |
 | channel/latest    | **free** | 15 videos + exact stats         |
-| channel/videos    | 1/page   | 100 videos per page (any tab)   |
+| channel/videos    | 1/page   | ~100/page unsorted, ~30/page sorted |
 | channel/search    | 1        | Videos matching query           |
 | channel/playlists | 1/page   | Channel's playlists             |
 | channel/posts     | 1/page   | Community tab content           |
