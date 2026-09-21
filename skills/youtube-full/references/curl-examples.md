@@ -66,7 +66,7 @@ curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TO
   -H "User-Agent: YourAgent/1.0"
 ```
 
-Existing calls are untouched: omitting sort returns the uploads feed exactly as before. sort=latest is a different view (YouTube's Videos tab, Shorts excluded), not a re-ordering of it. Omitted keeps the uploads feed (~100/page, Shorts mixed in, members-only videos excluded); any value switches to the channel Videos tab (~30/page, long-form only, members-only videos included and flagged `members_only`). Repeat the same `tab` and `sort` on every page.
+Sort a channel's videos by latest, popular, or oldest, for example most-popular first. Sorted pages return about 30 videos (unsorted about 100); each page costs 1 credit.
 
 
 ## Search within channel — 1 credit
